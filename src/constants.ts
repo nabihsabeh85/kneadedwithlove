@@ -16,5 +16,5 @@ export const NAV_LINKS = [
   { href: "#contact", label: "Contact" },
 ] as const;
 
-/** Drop your circular logo file at public/images/logo.png */
-export const LOGO_SRC = "/images/logo.png";
+/** Brand logo at public/images/logo.png */
+export const LOGO_SRC = `${import.meta.env.BASE_URL}images/logo.png`;
