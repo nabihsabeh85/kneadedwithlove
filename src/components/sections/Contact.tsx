@@ -30,7 +30,7 @@ const CUSTOMER_CONFIRMATION = `Thank you for your order request from Kneaded wit
 
 We received your order and will contact you within 6 hours to confirm your pickup date and payment details.
 
-We cannot wait to bake something sweet and special for you! 💜
+We cannot wait to bake something sweet and special for you!
 
 Kneaded with Love
 ${BRAND.phone}
@@ -239,7 +239,6 @@ export function Contact() {
             />
             <input type="hidden" name="_template" value="table" />
             <input type="hidden" name="_autoresponse" value={CUSTOMER_CONFIRMATION} />
-            <input type="hidden" name="_replyto" value={form.email} />
             <input type="hidden" name="_honey" value="" />
             <input
               type="hidden"
