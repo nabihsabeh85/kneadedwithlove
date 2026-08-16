@@ -7,24 +7,22 @@ export type FeaturedProduct = {
 
 export const featuredProducts: FeaturedProduct[] = [
   {
-    name: "Classic Sourdough",
+    name: "Classic Country",
     description:
-      "Our signature loaf — slow-fermented, crusty outside, tender and tangy within.",
-    price: "Starting at $10",
-    imageAlt: "Featured classic sourdough loaf",
+      "Our signature loaf — organic flour, water, kosher salt, and live starter.",
+    price: "$12",
+    imageAlt: "Featured classic country sourdough loaf",
   },
   {
-    name: "Cinnamon Rolls",
-    description:
-      "Soft spirals with brown butter cinnamon filling and a sweet glaze on top.",
-    price: "Starting at $12",
-    imageAlt: "Featured cinnamon rolls",
+    name: "Za'atar",
+    description: "Wild thyme, sesame, and sumac in a fragrant, savory loaf.",
+    price: "$16",
+    imageAlt: "Featured za'atar sourdough loaf",
   },
   {
-    name: "Custom Treat Box",
-    description:
-      "A handpicked mix of cookies, muffins, and seasonal favorites — made to gift.",
-    price: "Starting at $28",
-    imageAlt: "Featured custom treat box",
+    name: "Dark Chocolate Chip Sourdough Cookies",
+    description: "Four soft sourdough cookies packed with dark chocolate.",
+    price: "4 for $10",
+    imageAlt: "Featured dark chocolate chip sourdough cookies",
   },
 ];

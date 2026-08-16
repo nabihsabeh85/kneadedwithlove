@@ -10,7 +10,7 @@ export function Menu() {
           eyebrow="Our Bakes"
           headingId="menu-heading"
           title="Menu"
-          subtitle="Fresh flavors rotating with the season — message us for today's availability."
+          subtitle="Pre-order only. Exact pickup address sent after your order is confirmed."
         />
 
         <div className="space-y-14">

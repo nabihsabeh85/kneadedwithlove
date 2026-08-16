@@ -2,10 +2,16 @@ export const BRAND = {
   name: "Kneaded with Love",
   tagline: "Homemade sourdough & baked goods",
   email: "hello@kneadedwithlove.com",
-  phone: "(555) 123-4567",
-  location: "West Boca / Local Pickup",
-  instagram: "https://instagram.com/",
-  facebook: "https://facebook.com/",
+  phone: "(561) 325-8390",
+  phoneTel: "5613258390",
+  location: "West Boca Raton",
+  pickupNote:
+    "Pre-order only. Exact pickup address sent after your order is confirmed.",
+  cottageFoodNote:
+    "Made in a cottage food operation that is not subject to Florida’s food safety regulations.",
+  instagramHandle: "@kneadedwithlovefl",
+  instagram: "https://instagram.com/kneadedwithlovefl",
+  website: "https://kneadedwithlove.com",
 } as const;
 
 export const NAV_LINKS = [

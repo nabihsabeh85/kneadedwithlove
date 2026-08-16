@@ -74,12 +74,12 @@ export function Contact() {
 
           <ul className="space-y-4 font-body text-sm sm:text-base">
             <li className="flex gap-3">
-              <span className="font-bold text-deep-blue">Location</span>
+              <span className="font-bold text-deep-blue">Pickup</span>
               <span>{BRAND.location}</span>
             </li>
             <li className="flex gap-3">
-              <span className="font-bold text-deep-blue">Phone</span>
-              <a href={`tel:${BRAND.phone.replace(/\D/g, "")}`} className="hover:text-lavender">
+              <span className="font-bold text-deep-blue">Phone / Text</span>
+              <a href={`tel:${BRAND.phoneTel}`} className="hover:text-lavender">
                 {BRAND.phone}
               </a>
             </li>
@@ -89,25 +89,25 @@ export function Contact() {
                 {BRAND.email}
               </a>
             </li>
-            <li className="flex gap-4 pt-2">
+            <li className="flex gap-3">
+              <span className="font-bold text-deep-blue">Instagram</span>
               <a
                 href={BRAND.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-lavender hover:text-deep-blue"
+                className="hover:text-lavender"
               >
-                Instagram
-              </a>
-              <a
-                href={BRAND.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-lavender hover:text-deep-blue"
-              >
-                Facebook
+                {BRAND.instagramHandle}
               </a>
             </li>
           </ul>
+
+          <p className="mt-6 font-body text-sm leading-relaxed text-warm-gray/90">
+            {BRAND.pickupNote}
+          </p>
+          <p className="mt-3 font-body text-xs leading-relaxed text-warm-gray/75">
+            {BRAND.cottageFoodNote}
+          </p>
         </div>
 
         <div className="lg:col-span-3">
@@ -180,7 +180,7 @@ export function Contact() {
                 type="text"
                 name="orderItem"
                 required
-                placeholder="e.g. Classic Sourdough + Cinnamon Rolls"
+                placeholder="e.g. Classic Country + S'mores cookies"
                 value={form.orderItem}
                 onChange={update("orderItem")}
                 className={inputClass}

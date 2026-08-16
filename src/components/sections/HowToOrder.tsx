@@ -4,17 +4,19 @@ const steps = [
   {
     number: "01",
     title: "Browse the menu",
-    description: "Pick your favorites from sourdough, sweet bakes, and seasonal specials.",
+    description: "Pick your favorites from our loaves and sourdough cookies.",
   },
   {
     number: "02",
-    title: "Send us your order request",
-    description: "Fill out the form below or message us on Instagram with what you'd like.",
+    title: "Send your pre-order",
+    description:
+      "Fill out the form below, text us, or message @kneadedwithlovefl on Instagram.",
   },
   {
     number: "03",
-    title: "Confirm pickup date and time",
-    description: "We'll confirm availability and your West Boca pickup window.",
+    title: "Confirm pickup",
+    description:
+      "We'll confirm your order and send the exact West Boca Raton pickup address.",
   },
   {
     number: "04",
@@ -54,8 +56,13 @@ export function HowToOrder() {
         </ol>
 
         <p className="mt-10 rounded-2xl border border-lavender/30 bg-white/70 px-6 py-4 text-center font-body text-sm leading-relaxed text-deep-blue sm:text-base">
-          <strong className="font-bold">Please note:</strong> Orders are made fresh, so please
-          allow at least <strong>24–48 hours</strong> when possible.
+          <strong className="font-bold">Pre-order only.</strong> Exact pickup address sent after
+          your order is confirmed. Please allow at least{" "}
+          <strong>24–48 hours</strong> when possible.
+        </p>
+        <p className="mt-4 text-center font-body text-xs leading-relaxed text-warm-gray/75">
+          Made in a cottage food operation that is not subject to Florida’s food safety
+          regulations.
         </p>
       </div>
     </section>
