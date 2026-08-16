@@ -1,3 +1,4 @@
+import { BRAND, PICKUP_DAYS_LABEL, PICKUP_DAYS_SENTENCE } from "../../constants";
 import { SectionHeading } from "../ui/SectionHeading";
 
 const steps = [
@@ -9,14 +10,12 @@ const steps = [
   {
     number: "02",
     title: "Send your pre-order",
-    description:
-      "Fill out the form below, text us, or message @kneadedwithlovefl on Instagram.",
+    description: `Add your items in the form below, text us, or message ${BRAND.instagramHandle} on Instagram.`,
   },
   {
     number: "03",
     title: "Confirm pickup",
-    description:
-      "We'll confirm your order and send the exact West Boca Raton pickup address.",
+    description: `We'll confirm your order for ${PICKUP_DAYS_LABEL} pickup and send the exact ${BRAND.location} address.`,
   },
   {
     number: "04",
@@ -56,13 +55,12 @@ export function HowToOrder() {
         </ol>
 
         <p className="mt-10 rounded-2xl border border-lavender/30 bg-white/70 px-6 py-4 text-center font-body text-sm leading-relaxed text-deep-blue sm:text-base">
-          <strong className="font-bold">Pre-order only.</strong> Exact pickup address sent after
-          your order is confirmed. Please allow at least{" "}
-          <strong>24–48 hours</strong> when possible.
+          <strong className="font-bold">Pre-order only.</strong> Pickup days are{" "}
+          <strong>{PICKUP_DAYS_SENTENCE}</strong>. Exact pickup address sent after your order is
+          confirmed. Please allow at least <strong>24–48 hours</strong> when possible.
         </p>
         <p className="mt-4 text-center font-body text-xs leading-relaxed text-warm-gray/75">
-          Made in a cottage food operation that is not subject to Florida’s food safety
-          regulations.
+          {BRAND.cottageFoodNote}
         </p>
       </div>
     </section>
