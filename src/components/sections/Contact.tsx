@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useMemo, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import { BRAND, PICKUP_DAYS, PICKUP_DAYS_LABEL } from "../../constants";
 import { menuCategories } from "../../data/menu";
 import { SectionHeading } from "../ui/SectionHeading";
@@ -23,6 +23,8 @@ const initialState: FormState = {
 };
 
 type SubmitStatus = "idle" | "sending" | "success" | "error";
+
+const ORDER_RECEIVED_PARAM = "order-received";
 
 const CUSTOMER_CONFIRMATION = `Thank you for your order request from Kneaded with Love!
 
@@ -132,13 +134,20 @@ export function Contact() {
     setErrorMessage("");
   };
 
-  const handleDelivery = () => {
-    if (status === "sending") {
-      setStatus("success");
-      setForm(initialState);
-      setQuantities({});
-    }
-  };
+  // FormSubmit redirects back with this flag once the order is delivered
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(ORDER_RECEIVED_PARAM) !== "1") return;
+
+    setStatus("success");
+    params.delete(ORDER_RECEIVED_PARAM);
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}#contact`,
+    );
+  }, []);
 
   const inputClass =
     "w-full rounded-2xl border border-light-lavender bg-white/90 px-4 py-3 font-body text-warm-gray placeholder:text-warm-gray/50 transition-colors focus:border-soft-blue focus:outline-none focus:ring-2 focus:ring-soft-blue/30";
@@ -216,9 +225,13 @@ export function Contact() {
             onSubmit={handleSubmit}
             action={`https://formsubmit.co/${BRAND.orderEmail}`}
             method="POST"
-            target="order-submission-target"
             className="card-surface space-y-6 p-6 sm:p-8"
           >
+            <input
+              type="hidden"
+              name="_next"
+              value={`${BRAND.website}/?${ORDER_RECEIVED_PARAM}=1`}
+            />
             <input
               type="hidden"
               name="_subject"
@@ -443,12 +456,6 @@ export function Contact() {
               {status === "sending" ? "Sending…" : "Submit Order Request"}
             </Button>
           </form>
-          <iframe
-            name="order-submission-target"
-            title="Order submission response"
-            className="hidden"
-            onLoad={handleDelivery}
-          />
         </div>
       </div>
 
