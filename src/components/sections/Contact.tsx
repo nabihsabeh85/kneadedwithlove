@@ -24,6 +24,16 @@ const initialState: FormState = {
 
 type SubmitStatus = "idle" | "sending" | "success" | "error";
 
+const CUSTOMER_CONFIRMATION = `Thank you for your order request from Kneaded with Love!
+
+We received your order and will contact you within 6 hours to confirm your pickup date and payment details.
+
+We cannot wait to bake something sweet and special for you! 💜
+
+Kneaded with Love
+${BRAND.phone}
+${BRAND.instagramHandle}`;
+
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -91,16 +101,28 @@ export function Contact() {
       `Submitted from: ${BRAND.website}`,
     ].join("\n");
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e: FormEvent) => {
+    if (
+      !form.name.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.message.trim()
+    ) {
+      e.preventDefault();
+      setStatus("error");
+      setErrorMessage("Please complete every required field.");
+      return;
+    }
 
     if (selectedItems.length === 0) {
+      e.preventDefault();
       setStatus("error");
       setErrorMessage("Please add at least one item to your order.");
       return;
     }
 
     if (!form.pickupDay) {
+      e.preventDefault();
       setStatus("error");
       setErrorMessage(`Please choose a pickup day (${PICKUP_DAYS_LABEL}).`);
       return;
@@ -108,49 +130,10 @@ export function Contact() {
 
     setStatus("sending");
     setErrorMessage("");
+  };
 
-    const notification = buildNotification(form);
-    const orderSummary = selectedItems
-      .map((item) => `${item.quantity} x ${item.name} (${item.price})`)
-      .join(", ");
-
-    try {
-      const response = await fetch(
-        `https://formsubmit.co/ajax/${encodeURIComponent(BRAND.orderEmail)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            _subject: `New order request from ${form.name}`,
-            _template: "table",
-            name: form.name,
-            phone: form.phone,
-            email: form.email,
-            order: orderSummary,
-            estimated_total: currency.format(orderTotal),
-            pickup_day: form.pickupDay,
-            message: form.message.trim() || "(none)",
-            _replyto: form.email,
-            details: notification,
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Form service returned an error");
-      }
-
-      setStatus("success");
-      setForm(initialState);
-      setQuantities({});
-    } catch {
-      // Fallback: open the customer's mail app with a prefilled message to the bakery
-      const subject = encodeURIComponent(`New order request from ${form.name}`);
-      const body = encodeURIComponent(notification);
-      window.location.href = `mailto:${BRAND.orderEmail}?subject=${subject}&body=${body}`;
+  const handleDelivery = () => {
+    if (status === "sending") {
       setStatus("success");
       setForm(initialState);
       setQuantities({});
@@ -220,16 +203,6 @@ export function Contact() {
         </div>
 
         <div className="lg:col-span-3">
-          {status === "success" && (
-            <div
-              role="status"
-              className="mb-6 rounded-2xl border border-soft-blue/40 bg-soft-blue/10 px-5 py-4 font-body text-deep-blue"
-            >
-              Thank you! Your order request was sent to {BRAND.orderEmail}. We&apos;ll confirm
-              your {PICKUP_DAYS_LABEL} pickup soon.
-            </div>
-          )}
-
           {status === "error" && (
             <div
               role="alert"
@@ -241,18 +214,44 @@ export function Contact() {
 
           <form
             onSubmit={handleSubmit}
+            action={`https://formsubmit.co/${BRAND.orderEmail}`}
+            method="POST"
+            target="order-submission-target"
             className="card-surface space-y-6 p-6 sm:p-8"
-            noValidate
           >
+            <input
+              type="hidden"
+              name="_subject"
+              value={`New order request from ${form.name || "Customer"}`}
+            />
+            <input type="hidden" name="_template" value="table" />
+            <input type="hidden" name="_autoresponse" value={CUSTOMER_CONFIRMATION} />
+            <input type="hidden" name="_replyto" value={form.email} />
+            <input type="hidden" name="_honey" value="" />
+            <input
+              type="hidden"
+              name="order"
+              value={selectedItems
+                .map((item) => `${item.quantity} x ${item.name} (${item.price})`)
+                .join(", ")}
+            />
+            <input
+              type="hidden"
+              name="estimated_total"
+              value={currency.format(orderTotal)}
+            />
+            <input type="hidden" name="pickup_day" value={form.pickupDay} />
+            <input type="hidden" name="details" value={buildNotification(form)} />
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                  Name
+                  Name <span aria-hidden="true">*</span>
                 </span>
                 <input
                   type="text"
                   name="name"
                   required
+                  minLength={2}
                   value={form.name}
                   onChange={update("name")}
                   className={inputClass}
@@ -261,12 +260,13 @@ export function Contact() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                  Phone number
+                  Phone number <span aria-hidden="true">*</span>
                 </span>
                 <input
                   type="tel"
                   name="phone"
                   required
+                  minLength={7}
                   value={form.phone}
                   onChange={update("phone")}
                   className={inputClass}
@@ -277,7 +277,7 @@ export function Contact() {
 
             <label className="block">
               <span className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                Email
+                Email <span aria-hidden="true">*</span>
               </span>
               <input
                 type="email"
@@ -292,7 +292,7 @@ export function Contact() {
 
             <fieldset>
               <legend className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                Choose your items
+                Choose your items <span aria-hidden="true">*</span>
               </legend>
 
               <div className="space-y-5">
@@ -391,7 +391,7 @@ export function Contact() {
 
             <fieldset>
               <legend className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                Pickup day
+                Pickup day <span aria-hidden="true">*</span>
               </legend>
               <div className="grid gap-3 sm:grid-cols-2">
                 {PICKUP_DAYS.map((day) => (
@@ -420,11 +420,13 @@ export function Contact() {
 
             <label className="block">
               <span className="mb-1.5 block font-body text-sm font-semibold text-deep-blue">
-                Message / special request
+                Message / special request <span aria-hidden="true">*</span>
               </span>
               <textarea
                 name="message"
                 rows={4}
+                required
+                minLength={2}
                 value={form.message}
                 onChange={update("message")}
                 className={`${inputClass} resize-y`}
@@ -441,8 +443,64 @@ export function Contact() {
               {status === "sending" ? "Sending…" : "Submit Order Request"}
             </Button>
           </form>
+          <iframe
+            name="order-submission-target"
+            title="Order submission response"
+            className="hidden"
+            onLoad={handleDelivery}
+          />
         </div>
       </div>
+
+      {status === "success" && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-deep-blue/55 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setStatus("idle");
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-confirmation-title"
+            aria-describedby="order-confirmation-message"
+            className="w-full max-w-md rounded-3xl border border-light-lavender bg-cream p-7 text-center shadow-2xl sm:p-9"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-lavender/15 text-2xl">
+              💜
+            </div>
+            <h3
+              id="order-confirmation-title"
+              className="mt-4 font-display text-3xl text-deep-blue"
+            >
+              Order Request Received!
+            </h3>
+            <p
+              id="order-confirmation-message"
+              className="mt-3 font-body leading-relaxed text-warm-gray"
+            >
+              Thank you! We sent a confirmation email and will contact you within{" "}
+              <strong className="text-deep-blue">6 hours</strong> to confirm your pickup date
+              and payment details.
+            </p>
+            <p className="mt-3 font-body text-sm italic text-lavender">
+              We can&apos;t wait to bake something sweet and special for you!
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-6 w-full"
+              onClick={() => setStatus("idle")}
+              autoFocus
+            >
+              Sweet, thank you!
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
