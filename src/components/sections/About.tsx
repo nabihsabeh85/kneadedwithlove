@@ -1,5 +1,5 @@
+import { productImageSrc } from "../../constants";
 import { SectionHeading } from "../ui/SectionHeading";
-import { ImagePlaceholder } from "../ui/ImagePlaceholder";
 
 const ingredients = ["Organic flour", "Water", "Kosher salt", "A live starter"];
 
@@ -68,11 +68,17 @@ export function About() {
           </div>
         </div>
         <div className="relative lg:sticky lg:top-28">
-          <ImagePlaceholder
-            alt="Photo of our home bakery kitchen"
-            label="Add your kitchen photo"
-            className="rounded-[2.5rem] shadow-card"
-          />
+          <div className="overflow-hidden rounded-[2.5rem] bg-cream shadow-card">
+            <img
+              src={productImageSrc("veronica.jpg")}
+              alt="Veronica holding a freshly baked sourdough loaf in her kitchen"
+              width={768}
+              height={1024}
+              loading="lazy"
+              decoding="async"
+              className="aspect-[3/4] h-full w-full object-cover object-top"
+            />
+          </div>
           <p className="absolute right-5 bottom-5 rounded-full bg-white/95 px-4 py-2 font-body text-xs font-bold tracking-wide text-deep-blue uppercase shadow-soft">
             Four ingredients · Time
           </p>

@@ -61,12 +61,12 @@ export function Hero() {
           />
           <div className="relative overflow-hidden rounded-[2.5rem] border-8 border-white bg-white shadow-2xl">
             <img
-              src={productImageSrc("classic-country-loaf.jpg")}
-              alt="Freshly baked classic country sourdough loaf"
-              width={1024}
+              src={productImageSrc("veronica.jpg")}
+              alt="Veronica holding a freshly baked sourdough loaf in her kitchen"
+              width={768}
               height={1024}
               fetchPriority="high"
-              className="aspect-square h-full w-full object-cover"
+              className="aspect-[3/4] h-full w-full object-cover object-top"
             />
           </div>
           <div className="absolute -bottom-5 left-1/2 w-[82%] -translate-x-1/2 rounded-2xl border border-light-lavender bg-white/95 px-5 py-3 text-center shadow-soft backdrop-blur sm:left-6 sm:w-auto sm:translate-x-0 sm:text-left">
