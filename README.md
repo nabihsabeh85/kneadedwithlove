@@ -202,9 +202,27 @@ Work through these in order — the first two catch most setup mistakes.
    details" after the script confirms it. If submission fails, the customer sees
    an error asking them to text instead, and the browser console logs the cause.
 
-If the confirmation lands in spam, add a DMARC record for the domain — it
-currently has SPF (`include:_spf.google.com`) but no `_dmarc` TXT record, which
-weakens deliverability for a domain that sends real mail.
+### Email deliverability
+
+Customer confirmations are sent by Apps Script as `hello@kneadedwithlove.com`,
+so the domain must authenticate its own mail or Gmail rejects it outright
+(seen once as a hard bounce: "Message rejected", 0/1 delivered).
+
+Cloudflare DNS carries all three records:
+
+| Type | Name | Purpose |
+|------|------|---------|
+| TXT | `@` | SPF — `v=spf1 include:_spf.google.com ~all` |
+| TXT | `google._domainkey` | DKIM public key generated in Admin console |
+| TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:hello@kneadedwithlove.com` |
+
+DKIM also has to be switched on in **Admin console → Apps → Google Workspace →
+Gmail → Authenticate email → Start authentication**; the DNS record alone does
+not make Google sign anything. Status there should read *Authenticating email*.
+
+To confirm delivery of any given message, use **Admin console → Reporting →
+Email Log Search**, which shows per-recipient status (`Delivered to Gmail
+mailbox` vs `Bounced`) and the bounce reason.
 
 ### Tracking orders in the sheet
 
