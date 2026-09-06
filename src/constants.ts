@@ -1,10 +1,10 @@
 /** Available local pickup days — change here to update the whole site */
-export const PICKUP_DAYS = ["Wednesday", "Sunday"] as const;
+export const PICKUP_DAYS = ["Thursday", "Sunday"] as const;
 
-/** e.g. "Wednesday or Sunday" */
+/** e.g. "Thursday or Sunday" */
 export const PICKUP_DAYS_LABEL = PICKUP_DAYS.join(" or ");
 
-/** e.g. "Wednesday and Sunday" */
+/** e.g. "Thursday and Sunday" */
 export const PICKUP_DAYS_SENTENCE = PICKUP_DAYS.join(" and ");
 
 export const BRAND = {
@@ -56,7 +56,7 @@ export type PaymentMethodId = (typeof PAYMENT_METHOD_IDS)[number];
 export const PAYMENT = {
   zelleName: BRAND.name,
   zelleRecipient: BRAND.phone,
-  venmoUsername: "vernica-sabeh",
+  venmoUsername: "veronica-sabeh",
 } as const;
 
 export function paymentDestination(method: PaymentMethodId): string {

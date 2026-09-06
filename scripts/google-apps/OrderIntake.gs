@@ -24,11 +24,11 @@ const CONFIG = {
   BRAND_NAME: "Kneaded with Love",
   BRAND_PHONE: "(917) 671-7674",
   /** Keep in sync with PAYMENT.venmoUsername in src/constants.ts */
-  VENMO_USERNAME: "vernica-sabeh",
+  VENMO_USERNAME: "veronica-sabeh",
   BRAND_INSTAGRAM: "@kneadedwithlovefl",
   WEBSITE: "https://kneadedwithlove.com",
   /** Keep in sync with PICKUP_DAYS in src/constants.ts */
-  PICKUP_DAYS: ["Wednesday", "Sunday"],
+  PICKUP_DAYS: ["Thursday", "Sunday"],
   /** Keep in sync with PAYMENT_METHODS in src/constants.ts */
   PAYMENT_LABELS: {
     zelle: "Zelle",
