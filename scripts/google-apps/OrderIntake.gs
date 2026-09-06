@@ -151,7 +151,6 @@ function normalizeOrder_(data) {
   if (!name) throw new Error("Missing required field: name");
   if (!phone) throw new Error("Missing required field: phone");
   if (!email) throw new Error("Missing required field: email");
-  if (!message) throw new Error("Missing required field: message");
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error("Invalid email");
@@ -332,7 +331,7 @@ function sendBakeryEmail_(order) {
     lines.push("NOTE: an item is not in this script's price list — confirm its price manually.");
   }
 
-  lines.push("", "Message / special requests:", order.message);
+  lines.push("", "Message / special requests:", order.message || "(none)");
 
   if (order.source) {
     lines.push("", "Submitted from: " + order.source);
@@ -475,6 +474,9 @@ function runValidationTests_() {
   if (unpriced && !unpriced.hasUnpricedItem) {
     failures.push("an unknown item should set hasUnpricedItem");
   }
+
+  // The form marks the special request optional, so a blank one must go through.
+  expectValid("an order with no special request", { message: "" });
 
   expectRejected("a missing name", { name: "" });
   expectRejected("a malformed email", { email: "not-an-email" });
