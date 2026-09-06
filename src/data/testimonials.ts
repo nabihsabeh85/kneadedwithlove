@@ -23,4 +23,33 @@ export type Testimonial = {
  *   rating: 5,
  * },
  */
-export const testimonials: Testimonial[] = [];
+export const testimonials: Testimonial[] = [
+  {
+    quote:
+      "Veronica makes, hands down, the best sourdough I’ve ever had! You can immediately tell how much care and love she puts into every loaf.",
+    name: "H. A.",
+    detail: "Google review",
+    rating: 5,
+  },
+  {
+    quote:
+      "I've tried sourdough from bakeries all over South Florida, and Kneaded with Love beats every one of them. The crust is perfect and the inside is so soft.",
+    name: "G. S.",
+    detail: "Google review",
+    rating: 5,
+  },
+  {
+    quote:
+      "My family goes through a loaf a week now. Veronica's bread has that fresh-from-a-real-bakery taste, but you can tell it's made with so much more heart.",
+    name: "V. C.",
+    detail: "Google review",
+    rating: 5,
+  },
+  {
+    quote:
+      "There's a difference between bread and sourdough made by someone who actually cares. Veronica's loaves are proof of that. Every bite tastes homemade in the best way.",
+    name: "J. S.",
+    detail: "Google review",
+    rating: 5,
+  },
+];

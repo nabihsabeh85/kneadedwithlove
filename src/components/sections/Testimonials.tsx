@@ -54,7 +54,15 @@ export function Testimonials() {
 
         {hasReviews ? (
           <>
-            <ul className="grid gap-6 md:grid-cols-3">
+            <ul
+              className={`grid gap-6 ${
+                testimonials.length === 1
+                  ? "mx-auto max-w-lg"
+                  : testimonials.length % 2 === 0
+                    ? "mx-auto max-w-4xl md:grid-cols-2"
+                    : "md:grid-cols-3"
+              }`}
+            >
               {testimonials.map((item) => (
                 <li
                   key={item.name}
