@@ -12,7 +12,7 @@ export function About() {
             headingId="about-heading"
             eyebrow="About"
             title="Hi, I'm Veronica."
-            subtitle="I'm a mom of three and a teacher, and this bakery started in my own kitchen because of a question I couldn't stop asking."
+            subtitle="I'm a wife, a mom of three, and a teacher, and this bakery started in my own kitchen because of a question I couldn't stop asking."
             align="left"
           />
           <div className="space-y-4 font-body text-base leading-relaxed text-warm-gray/90 sm:text-lg">
@@ -55,14 +55,14 @@ export function About() {
           </ul>
           <div className="mt-6 space-y-4 font-body text-base leading-relaxed text-warm-gray/90 sm:text-lg">
             <p>
-              So I started baking. First for my own three, at my own counter,
-              testing loaves until I had one I felt good putting on our table. Then
-              friends started asking. Then their friends.
+              So I started baking. First for my husband and our three kids, at my
+              own counter, testing loaves until I had one I felt good putting on
+              our table. Then friends started asking. Then their friends.
             </p>
             <p>
               Kneaded with Love grew out of that. Every loaf is still made by hand
               in small batches, in the same kitchen where I started, with the same
-              four ingredients I trust enough to feed my own children.
+              four ingredients I trust enough to feed my own family.
             </p>
             <p>I'd love to bake for your family too.</p>
           </div>

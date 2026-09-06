@@ -22,18 +22,18 @@ export function Hero() {
             Sourdough made slowly, shared warmly.
           </h1>
           <div className="mx-auto mt-6 max-w-xl space-y-4 font-body text-base leading-relaxed text-warm-gray/90 sm:text-lg lg:mx-0">
-            <p>Hi, I'm Veronica, a mom of three and a teacher.</p>
+            <p>Hi, I'm Veronica. I'm a wife, a mom of three, and a teacher.</p>
             <p>
               This bakery started at my own kitchen counter, when I got tired of
-              feeding my kids bread full of preservatives and ingredients nobody
+              feeding my family bread full of preservatives and ingredients nobody
               needs. Real sourdough asks for four things: organic flour, water,
               kosher salt, and a live starter. The slow fermentation makes bread
-              easier to digest and gentler on blood sugar, the way bread was made
-              before shortcuts.
+              easier to digest and gentler on blood sugar, the way bread used to
+              be made.
             </p>
             <p>
-              I baked for my three kids first. Then friends started asking. Now
-              I'd love to bake for your family too.
+              I baked for my husband and kids first. Then friends started asking.
+              Now I'd love to bake for your family too.
             </p>
           </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">

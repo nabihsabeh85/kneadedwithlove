@@ -27,11 +27,11 @@ export function Menu() {
                   {category.items.length} choices
                 </span>
               </div>
-              <ul className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+              <ul className="flex flex-wrap justify-center gap-3 sm:gap-6">
                 {category.items.map((item) => (
                   <li
                     key={item.name}
-                    className="card-surface group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    className="card-surface group flex w-[calc(50%-0.375rem)] flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
                   >
                     <ImagePlaceholder
                       alt={item.imageAlt}
