@@ -204,9 +204,16 @@ Work through these in order — the first two catch most setup mistakes.
 
 ### Email deliverability
 
-Customer confirmations are sent by Apps Script as `hello@kneadedwithlove.com`,
-so the domain must authenticate its own mail or Gmail rejects it outright
-(seen once as a hard bounce: "Message rejected", 0/1 delivered).
+Order mail goes out through **`GmailApp.sendEmail`, never `MailApp.sendEmail`**.
+`MailApp` hands the message to an external SMTP path, and Gmail hard-bounced
+every one of those to an outside address ("Message rejected", 0/1 delivered),
+including a plain-text test with no links — while the identical recipient
+received mail composed in Gmail. `GmailApp` sends as the mailbox itself, which
+Email Log Search shows as "Delivered to a Google internal server". Switching
+back to `MailApp` silently breaks customer confirmations again.
+
+Customer confirmations are sent as `hello@kneadedwithlove.com`, so the domain
+also authenticates its own mail.
 
 Cloudflare DNS carries all three records:
 
