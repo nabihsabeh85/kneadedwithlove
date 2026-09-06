@@ -21,10 +21,21 @@ export function Hero() {
           >
             Sourdough made slowly, shared warmly.
           </h1>
-          <p className="mx-auto mt-6 max-w-xl font-body text-lg leading-relaxed text-warm-gray/90 sm:text-xl lg:mx-0">
-            Naturally leavened loaves and joyful treats, baked to order in our
-            home kitchen for your table.
-          </p>
+          <div className="mx-auto mt-6 max-w-xl space-y-4 font-body text-base leading-relaxed text-warm-gray/90 sm:text-lg lg:mx-0">
+            <p>Hi, I'm Veronica, a mom of three and a teacher.</p>
+            <p>
+              This bakery started at my own kitchen counter, when I got tired of
+              feeding my kids bread full of preservatives and ingredients nobody
+              needs. Real sourdough asks for four things: organic flour, water,
+              kosher salt, and a live starter. The slow fermentation makes bread
+              easier to digest and gentler on blood sugar, the way bread was made
+              before shortcuts.
+            </p>
+            <p>
+              I baked for my three kids first. Then friends started asking. Now
+              I'd love to bake for your family too.
+            </p>
+          </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
             <Button href="#menu" variant="primary">
               Explore the Menu
