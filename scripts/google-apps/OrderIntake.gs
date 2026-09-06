@@ -337,13 +337,7 @@ function sendBakeryEmail_(order) {
     lines.push("", "Submitted from: " + order.source);
   }
 
-  MailApp.sendEmail({
-    to: CONFIG.BAKERY_EMAIL,
-    replyTo: order.email,
-    name: CONFIG.BRAND_NAME,
-    subject: "New order request from " + order.name,
-    body: lines.join("\n"),
-  });
+  sendMail_(CONFIG.BAKERY_EMAIL, "New order request from " + order.name, lines.join("\n"), order.email);
 }
 
 function paymentNote_(order) {
@@ -396,12 +390,26 @@ function sendCustomerEmail_(order) {
       CONFIG.BRAND_INSTAGRAM,
     ]);
 
-  MailApp.sendEmail({
-    to: order.email,
-    replyTo: CONFIG.BAKERY_EMAIL,
+  sendMail_(
+    order.email,
+    "We received your " + CONFIG.BRAND_NAME + " order request",
+    lines.join("\n"),
+    CONFIG.BAKERY_EMAIL,
+  );
+}
+
+/**
+ * Sends through GmailApp, not MailApp.
+ *
+ * MailApp hands the message to an external SMTP path, and Gmail rejected every
+ * one of those to an outside address ("Message rejected", 0/1 delivered) even
+ * with SPF, DKIM, and DMARC in place. GmailApp sends as the mailbox itself,
+ * the same route as a message composed in Gmail, which delivers.
+ */
+function sendMail_(to, subject, body, replyTo) {
+  GmailApp.sendEmail(to, subject, body, {
     name: CONFIG.BRAND_NAME,
-    subject: "We received your " + CONFIG.BRAND_NAME + " order request",
-    body: lines.join("\n"),
+    replyTo: replyTo,
   });
 }
 
