@@ -18,13 +18,13 @@ export function SectionHeading({
   return (
     <div className={`mb-10 max-w-2xl sm:mb-12 ${alignClass}`}>
       {eyebrow && (
-        <p className="mb-2 font-body text-sm font-semibold tracking-widest text-lavender uppercase">
+        <p className="mb-3 font-body text-xs font-bold tracking-[0.2em] text-lavender uppercase sm:text-sm">
           {eyebrow}
         </p>
       )}
       <h2
         id={headingId}
-        className="font-display text-4xl leading-tight text-deep-blue sm:text-5xl lg:text-6xl"
+        className="font-display text-4xl font-bold leading-none tracking-[-0.025em] text-deep-blue sm:text-5xl lg:text-6xl"
       >
         {title}
       </h2>

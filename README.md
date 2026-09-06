@@ -33,6 +33,7 @@ Built site from this repo (`dist/` via GitHub Actions)
 | Hosting | GitHub Pages | Serves the static site |
 | CI/CD | GitHub Actions | Builds and deploys on every push to `main` |
 | SSL/HTTPS | GitHub Pages (Let’s Encrypt) | Free certificate after DNS check succeeds |
+| Order intake | Google Apps Script + Sheet | Logs orders and emails bakery + customer (FormSubmit fallback until configured) |
 
 **Important:** Cloudflare is used for **DNS only** (gray cloud). Do **not** enable Cloudflare proxy (orange cloud) for this site — it breaks GitHub Pages HTTPS verification and can return 404s.
 
@@ -118,6 +119,101 @@ On every push to `main` (or manual `workflow_dispatch`):
 
 ---
 
+## Order intake (email + Google Sheet)
+
+The contact form logs every order to a Google Sheet **and** sends email:
+
+1. Append a row to an **Orders** spreadsheet (status starts as `New`)
+2. Email **hello@kneadedwithlove.com** with the order details (Reply-To is the customer)
+3. Email the customer a confirmation (Reply-To is the bakery)
+
+> **Customers only get a confirmation email once `VITE_ORDER_INTAKE_URL` is set.**
+> Until then the form falls back to [FormSubmit.co](https://formsubmit.co), which
+> delivers the bakery notification but **not** the customer confirmation — its
+> auto-reply is sent by a third party with no authentication for
+> `kneadedwithlove.com`, so Gmail and Outlook filter it as spam. On the fallback
+> path the site deliberately does not claim an email was sent.
+
+### Why the script composes the emails
+
+The web app is deployed to **Anyone**, so anything POSTed to it is untrusted.
+`OrderIntake.gs` builds both email bodies itself from validated fields and
+recomputes every line total from its own `CONFIG.PRICES` table. Do not change it
+to email a string taken from the request — that would turn the endpoint into an
+open relay for sending mail as the bakery. It also caps throughput at
+`CONFIG.MAX_ORDERS_PER_HOUR` and refuses to record an order it cannot email.
+
+`CONFIG` in the script duplicates three things that live in the site source.
+Update both sides together, then redeploy a new version:
+
+| Script | Site |
+|--------|------|
+| `CONFIG.PRICES` | `priceUsd` in `src/data/menu.ts` |
+| `CONFIG.PICKUP_DAYS` | `PICKUP_DAYS` in `src/constants.ts` |
+| `CONFIG.PAYMENT_LABELS` | `PAYMENT_METHODS` in `src/constants.ts` |
+
+A menu item missing from `CONFIG.PRICES` is still accepted, but the order is
+flagged `price TBD` so you can price it by hand instead of losing the sale.
+
+### One-time Google setup
+
+1. In Google Drive (use the account that owns `hello@kneadedwithlove.com` if possible), create a spreadsheet named **Kneaded with Love Orders**.
+2. Open **Extensions → Apps Script**. Delete any stub code.
+3. Paste `scripts/google-apps/OrderIntake.gs` and save.
+4. **Deploy → New deployment → Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+5. Copy the web app URL (`https://script.google.com/macros/s/…/exec`).
+6. Authorize when prompted (Sheets + Gmail).
+
+Customer confirmation emails are sent **from the Google account that owns the script**. Deploy while logged into the inbox that should appear as the sender, or add `hello@kneadedwithlove.com` as a Gmail “Send mail as” alias on that account.
+
+### Point the website at the script
+
+Locally, copy `.env.example` to `.env.local` and set:
+
+```
+VITE_ORDER_INTAKE_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+```
+
+For production, add a GitHub Actions **variable** (not a secret — this URL is public in the built JS):
+
+| Name | Value |
+|------|--------|
+| `VITE_ORDER_INTAKE_URL` | the web app `/exec` URL |
+
+Repo → **Settings → Secrets and variables → Actions → Variables**. Redeploy after saving (push to `main` or run the workflow).
+
+### Verify it works
+
+Work through these in order — the first two catch most setup mistakes.
+
+1. **Script is reachable.** Open the `/exec` URL in a browser. You should see
+   `{"ok":true,"service":"kneaded-with-love-order-intake"}`. An HTML sign-in page
+   instead means access is not set to **Anyone**.
+2. **Validation is intact.** In the Apps Script editor, select
+   `runValidationTests_` and press **Run**. The execution log should end with
+   `All validation tests passed.` This sends no email and writes no rows.
+3. **End-to-end.** Place a real order on the site using an address you control
+   (not `hello@kneadedwithlove.com`, so you can tell the two emails apart). You
+   should get a new sheet row, the bakery notification, and the customer
+   confirmation. The success dialog names the address it emailed.
+4. **Failures are visible.** The form now only shows "we emailed your order
+   details" after the script confirms it. If submission fails, the customer sees
+   an error asking them to text instead, and the browser console logs the cause.
+
+If the confirmation lands in spam, add a DMARC record for the domain — it
+currently has SPF (`include:_spf.google.com`) but no `_dmarc` TXT record, which
+weakens deliverability for a domain that sends real mail.
+
+### Tracking orders in the sheet
+
+Columns: Timestamp, Status, Name, Phone, Email, Pickup day, Payment, Items, Estimated total, Message, Source.
+
+Use **Status** (`New`, `Confirmed`, `Paid`, `Ready`, `Picked up`, `Cancelled`) as the working queue. After you change the Apps Script, deploy a **new version** (Deploy → Manage deployments → Edit → New version).
+
+---
+
 ## Run locally
 
 ```bash
@@ -135,6 +231,9 @@ npm run preview  # preview production build locally
 ## Logo
 
 Brand logo: `public/images/logo.png`
+
+The site palette is derived from the logo and defined in one place — the `@theme`
+block in `src/index.css`. If the logo art changes, retune those tokens to match.
 
 ---
 

@@ -4,23 +4,18 @@ import { SectionHeading } from "../ui/SectionHeading";
 const steps = [
   {
     number: "01",
-    title: "Browse the menu",
-    description: "Pick your favorites from our loaves and sourdough cookies.",
+    title: "Build your order",
+    description: "Choose your loaves and cookies in the order form below.",
   },
   {
     number: "02",
-    title: "Send your pre-order",
-    description: `Add your items in the form below, text us, or message ${BRAND.instagramHandle} on Instagram.`,
+    title: "We confirm the details",
+    description: `We’ll reply within 6 hours to confirm your ${PICKUP_DAYS_LABEL} pickup.`,
   },
   {
     number: "03",
-    title: "Confirm pickup",
-    description: `We'll confirm your order for ${PICKUP_DAYS_LABEL} pickup and send the exact ${BRAND.location} address.`,
-  },
-  {
-    number: "04",
-    title: "Enjoy fresh homemade bakes",
-    description: "Pick up warm, beautiful bakes made just for you and your family.",
+    title: "Pick up & enjoy",
+    description: `We’ll send the ${BRAND.location} address. Pay by Zelle, Venmo, or at pickup.`,
   },
 ];
 
@@ -39,14 +34,16 @@ export function HowToOrder() {
           subtitle="Ordering is easy — we're a small home bakery, so every order gets personal attention."
         />
 
-        <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-6 md:grid-cols-3">
           {steps.map((step) => (
             <li
               key={step.number}
-              className="card-surface flex flex-col p-6 transition-all duration-300 hover:-translate-y-1"
+              className="card-surface relative flex flex-col p-7"
             >
-              <span className="font-display text-4xl text-soft-blue">{step.number}</span>
-              <h3 className="mt-3 font-body text-lg font-bold text-deep-blue">{step.title}</h3>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-light-lavender font-body text-sm font-bold text-lavender">
+                {step.number}
+              </span>
+              <h3 className="mt-5 font-display text-2xl font-bold text-deep-blue">{step.title}</h3>
               <p className="mt-2 font-body text-sm leading-relaxed text-warm-gray/85">
                 {step.description}
               </p>
@@ -57,7 +54,8 @@ export function HowToOrder() {
         <p className="mt-10 rounded-2xl border border-lavender/30 bg-white/70 px-6 py-4 text-center font-body text-sm leading-relaxed text-deep-blue sm:text-base">
           <strong className="font-bold">Pre-order only.</strong> Pickup days are{" "}
           <strong>{PICKUP_DAYS_SENTENCE}</strong>. Exact pickup address sent after your order is
-          confirmed. Please allow at least <strong>24–48 hours</strong> when possible.
+          confirmed. Pay with <strong>Zelle</strong>, <strong>Venmo</strong>, or at pickup.
+          Please allow at least <strong>24–48 hours</strong> when possible.
         </p>
         <p className="mt-4 text-center font-body text-xs leading-relaxed text-warm-gray/75">
           {BRAND.cottageFoodNote}

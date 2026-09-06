@@ -15,8 +15,14 @@ export function Header() {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    if (menuOpen) document.addEventListener("keydown", closeOnEscape);
+
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", closeOnEscape);
     };
   }, [menuOpen]);
 
@@ -30,15 +36,27 @@ export function Header() {
           : "bg-cream/80 backdrop-blur-sm"
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-12">
-        <Logo size="md" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:px-12">
+        <div className="flex items-center gap-3">
+          <Logo size="sm" />
+          <a
+            href="#home"
+            className="hidden leading-none text-deep-blue sm:block"
+            aria-label={`${BRAND.name} — back to home`}
+          >
+            <span className="block font-display text-xl font-bold">Kneaded with Love</span>
+            <span className="mt-1 block font-body text-[0.65rem] font-bold tracking-[0.16em] text-lavender uppercase">
+              West Boca bakery
+            </span>
+          </a>
+        </div>
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-7 md:flex" aria-label="Main navigation">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="font-body text-sm font-semibold text-warm-gray transition-colors hover:text-deep-blue"
+              className="font-body text-sm font-semibold text-warm-gray transition-colors hover:text-lavender"
             >
               {link.label}
             </a>
@@ -47,7 +65,7 @@ export function Header() {
 
         <a
           href="#contact"
-          className="hidden rounded-full bg-lavender px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-all hover:bg-lavender/90 md:inline-flex"
+          className="hidden rounded-full bg-deep-blue px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:bg-deep-blue/90 md:inline-flex"
         >
           Order Now
         </a>
@@ -104,7 +122,7 @@ export function Header() {
                 onClick={closeMenu}
                 className="inline-flex w-full justify-center rounded-full bg-lavender px-6 py-3 font-semibold text-white"
               >
-                Place an Order
+                Start Your Order
               </a>
             </li>
           </ul>

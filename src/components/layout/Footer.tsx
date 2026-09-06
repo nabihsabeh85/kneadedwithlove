@@ -39,12 +39,27 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col items-center gap-3 sm:items-end">
-            <SocialIcon label="Instagram" href={BRAND.instagram}>
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.5.6.2 1 .5 1.5 1 .5.5.8.9 1 1.5.2.4.4 1.1.5 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.5 2.3-.2.6-.5 1-1 1.5-.5.5-.9.8-1.5 1-.4.2-1.1.4-2.3.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.5-.6-.2-1-.5-1.5-1-.5-.5-.8-.9-1-1.5-.2-.4-.4-1.1-.5-2.3-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.3-1.9.5-2.3.2-.6.5-1 1-1.5.5-.5.9-.8 1.5-1 .4-.2 1.1-.4 2.3-.5 1.3-.1 1.7-.1 4.9-.1zm0-2.2C8.7 0 8.3 0 7 0 5.7.1 4.7.3 3.9.6 3 .9 2.2 1.4 1.4 2.2.6 3 .1 3.8-.2 4.7-.5 5.5-.8 6.5-1 7.8-1 9.1-1.2 10.5-1.2 11.9-1.2 15.3v.1c0 3.4 0 3.8.1 5.1.1 1.3.3 2.3.6 3.1.3.9.8 1.7 1.6 2.5.8.8 1.6 1.3 2.5 1.6.8.3 1.8.5 3.1.6 1.3.1 1.7.1 5.1.1s3.8 0 5.1-.1c1.3-.1 2.3-.3 3.1-.6.9-.3 1.7-.8 2.5-1.6.8-.8 1.3-1.6 1.6-2.5.3-.8.5-1.8.6-3.1.1-1.3.1-1.7.1-5.1s0-3.8-.1-5.1c-.1-1.3-.3-2.3-.6-3.1-.3-.9-.8-1.7-1.6-2.5-.8-.8-1.6-1.3-2.5-1.6-.8-.3-1.8-.5-3.1-.6C15.7 0 15.3 0 12 0z" />
-                <path d="M12 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4zm0 10.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.5a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8z" />
-              </svg>
-            </SocialIcon>
+            <div className="flex items-center gap-2">
+              <SocialIcon label="Instagram" href={BRAND.instagram}>
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+                </svg>
+              </SocialIcon>
+              <SocialIcon label="Facebook" href={BRAND.facebook}>
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3.1l.9-4H13V9c0-.6.4-1 1-1Z" />
+                </svg>
+              </SocialIcon>
+            </div>
             <a
               href={BRAND.instagram}
               target="_blank"

@@ -1,10 +1,12 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "outline";
+type Variant = "primary" | "secondary" | "outline" | "light";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   href?: string;
+  /** With href, opens in a new tab. Ignored without href. */
+  external?: boolean;
   children: ReactNode;
 };
 
@@ -15,11 +17,14 @@ const variants: Record<Variant, string> = {
     "bg-lavender text-white hover:bg-lavender/90 shadow-soft hover:shadow-lg",
   outline:
     "border-2 border-deep-blue/20 bg-white/70 text-deep-blue hover:border-lavender hover:bg-light-lavender/40",
+  light:
+    "bg-white text-deep-blue shadow-soft hover:-translate-y-0.5 hover:bg-cream hover:shadow-lg",
 };
 
 export function Button({
   variant = "primary",
   href,
+  external = false,
   className = "",
   children,
   ...props
@@ -28,7 +33,11 @@ export function Button({
 
   if (href) {
     return (
-      <a href={href} className={classes}>
+      <a
+        href={href}
+        className={classes}
+        {...(external && { target: "_blank", rel: "noopener noreferrer" })}
+      >
         {children}
       </a>
     );

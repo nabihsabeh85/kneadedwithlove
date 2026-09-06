@@ -3,3 +3,6 @@ dist
 .node
 .DS_Store
 *.local
+.env
+.env.*
+!.env.example

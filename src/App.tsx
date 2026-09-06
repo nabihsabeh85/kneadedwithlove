@@ -5,8 +5,6 @@ import { Hero } from "./components/sections/Hero";
 import { About } from "./components/sections/About";
 import { Menu } from "./components/sections/Menu";
 import { HowToOrder } from "./components/sections/HowToOrder";
-import { FeaturedProducts } from "./components/sections/FeaturedProducts";
-import { WeeklySpecials } from "./components/sections/WeeklySpecials";
 import { Gallery } from "./components/sections/Gallery";
 import { Testimonials } from "./components/sections/Testimonials";
 import { Contact } from "./components/sections/Contact";
@@ -23,11 +21,9 @@ export default function App() {
       <Header />
       <main id="main">
         <Hero />
-        <About />
         <Menu />
         <HowToOrder />
-        <FeaturedProducts />
-        <WeeklySpecials />
+        <About />
         <Gallery />
         <Testimonials />
         <Contact />

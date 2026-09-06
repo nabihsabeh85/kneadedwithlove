@@ -1,27 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  --color-soft-blue: #7dafe8;
-  --color-deep-blue: #1f5e9c;
-  --color-lavender: #9b6acd;
-  --color-light-lavender: #eaddf8;
-  --color-cream: #fffdf8;
-  --color-warm-gray: #4a4a4a;
+  --color-soft-blue: #9aabd5;
+  --color-deep-blue: #293a73;
+  --color-lavender: #79518f;
+  --color-light-lavender: #ebe4f4;
+  --color-cream: #fffaf5;
+  --color-warm-gray: #4d4a4b;
 
-  --font-display: "Great Vibes", cursive;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Great Vibes", cursive;
   --font-body: "Nunito", system-ui, sans-serif;
 
-  --shadow-soft: 0 8px 32px rgba(31, 94, 156, 0.1);
-  --shadow-card: 0 4px 24px rgba(155, 106, 205, 0.12);
+  --shadow-soft: 0 12px 36px rgba(41, 58, 115, 0.1);
+  --shadow-card: 0 12px 34px rgba(70, 54, 82, 0.1);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
 
   body {
     @apply bg-cream font-body text-warm-gray antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-deep-blue;
   }
 
   ::selection {
@@ -34,11 +40,30 @@
     font-family: var(--font-display);
   }
 
+  .font-script {
+    font-family: var(--font-script);
+  }
+
   .section-padding {
-    @apply px-5 py-16 sm:px-8 sm:py-20 lg:px-12 lg:py-24;
+    @apply px-5 py-16 sm:px-8 sm:py-20 lg:px-12 lg:py-28;
   }
 
   .card-surface {
-    @apply rounded-3xl border border-light-lavender/60 bg-white/80 shadow-card backdrop-blur-sm;
+    @apply rounded-3xl border border-light-lavender/70 bg-white shadow-card;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

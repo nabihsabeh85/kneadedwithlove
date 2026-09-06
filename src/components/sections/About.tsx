@@ -34,11 +34,16 @@ export function About() {
             ))}
           </ul>
         </div>
-        <ImagePlaceholder
-          alt="Warm home bakery kitchen scene"
-          label="Our kitchen"
-          className="aspect-square rounded-3xl lg:aspect-[4/5]"
-        />
+        <div className="relative">
+          <ImagePlaceholder
+            alt="Photo of our home bakery kitchen"
+            label="Add your kitchen photo"
+            className="rounded-[2.5rem] shadow-card"
+          />
+          <p className="absolute right-5 bottom-5 rounded-full bg-white/95 px-4 py-2 font-body text-xs font-bold tracking-wide text-deep-blue uppercase shadow-soft">
+            Patiently fermented · Baked fresh
+          </p>
+        </div>
       </div>
     </section>
   );
