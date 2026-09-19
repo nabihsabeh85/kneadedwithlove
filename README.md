@@ -33,7 +33,7 @@ Built site from this repo (`dist/` via GitHub Actions)
 | Hosting | GitHub Pages | Serves the static site |
 | CI/CD | GitHub Actions | Builds and deploys on every push to `main` |
 | SSL/HTTPS | GitHub Pages (Let’s Encrypt) | Free certificate after DNS check succeeds |
-| Order intake | Google Apps Script + Sheet | Logs orders and emails bakery + customer (FormSubmit fallback until configured) |
+| Order intake | Google Apps Script + Sheet | Logs orders, serves pickup dates, emails bakery + customer (`hello@kneadedwithlove.com`) |
 
 **Important:** Cloudflare is used for **DNS only** (gray cloud). Do **not** enable Cloudflare proxy (orange cloud) for this site — it breaks GitHub Pages HTTPS verification and can return 404s.
 
@@ -121,18 +121,26 @@ On every push to `main` (or manual `workflow_dispatch`):
 
 ## Order intake (email + Google Sheet)
 
-The contact form logs every order to a Google Sheet **and** sends email:
+Production is live. The contact form talks to a Google Apps Script web app
+owned by **hello@kneadedwithlove.com**. That script:
 
-1. Append a row to an **Orders** spreadsheet (status starts as `New`)
-2. Email **hello@kneadedwithlove.com** with the order details (Reply-To is the customer)
-3. Email the customer a confirmation (Reply-To is the bakery)
+1. Serves the pickup calendar on GET (`pickupDates` as `YYYY-MM-DD`)
+2. Appends a row to the **Orders** spreadsheet (status starts as `New`)
+3. Emails **hello@kneadedwithlove.com** with the order details (Reply-To is the customer)
+4. Emails the customer a confirmation from hello@ (Reply-To is the bakery)
 
-> **Customers only get a confirmation email once `VITE_ORDER_INTAKE_URL` is set.**
-> Until then the form falls back to [FormSubmit.co](https://formsubmit.co), which
-> delivers the bakery notification but **not** the customer confirmation — its
-> auto-reply is sent by a third party with no authentication for
-> `kneadedwithlove.com`, so Gmail and Outlook filter it as spam. On the fallback
-> path the site deliberately does not claim an email was sent.
+| Piece | Production |
+|-------|------------|
+| Spreadsheet | [Kneaded with Love Orders](https://docs.google.com/spreadsheets/d/1Dgj1E4pe9SQnGMyi_4WF7ozyDUV_9rpgWoXnYNXyy4Y/edit) |
+| Availability tab | same spreadsheet, [gid=2043331286](https://docs.google.com/spreadsheets/d/1Dgj1E4pe9SQnGMyi_4WF7ozyDUV_9rpgWoXnYNXyy4Y/edit#gid=2043331286) |
+| Apps Script | Execute as hello@, access **Anyone** |
+| Web app URL | [`/macros/s/…/exec`](https://script.google.com/macros/s/AKfycbylSxwJoLKlcYVs-qJGr5pbw4TYdHcmpHKLSCc9NCWWe1h6NjgU7Rj_ZuBN_6Wt-NoE/exec) (also GitHub Actions variable `VITE_ORDER_INTAKE_URL`) |
+
+If `VITE_ORDER_INTAKE_URL` is missing locally, the form falls back to
+[FormSubmit.co](https://formsubmit.co). That path notifies the bakery but
+**does not** send a reliable customer confirmation — FormSubmit's auto-reply
+has no authentication for `kneadedwithlove.com`, so Gmail and Outlook treat it
+as spam. The site only claims an email was sent after the Apps Script confirms it.
 
 ### Why the script composes the emails
 
@@ -157,38 +165,39 @@ flagged `price TBD` so you can price it by hand instead of losing the sale.
 
 ### One-time Google setup
 
-1. In Google Drive (use the account that owns `hello@kneadedwithlove.com` if possible), create a spreadsheet named **Kneaded with Love Orders**.
+Production already has this. Recreate only if the hello@ project is lost:
+
+1. In Google Drive **as hello@kneadedwithlove.com**, create a spreadsheet named **Kneaded with Love Orders**.
 2. Open **Extensions → Apps Script**. Delete any stub code.
 3. Paste `scripts/google-apps/OrderIntake.gs` and save.
 4. **Deploy → New deployment → Web app**
-   - Execute as: **Me**
+   - Execute as: **Me** (must be hello@ — that is the From address)
    - Who has access: **Anyone**
 5. Copy the web app URL (`https://script.google.com/macros/s/…/exec`).
 6. Authorize when prompted (Sheets + Gmail).
 
-Customer confirmation emails are sent **from the Google account that owns the script**. Deploy while logged into the inbox that should appear as the sender, or add `hello@kneadedwithlove.com` as a Gmail “Send mail as” alias on that account.
+Do not deploy from a personal Gmail. Confirmations would then send as that
+account instead of hello@.
 
 ### Point the website at the script
 
-Locally, copy `.env.example` to `.env.local` and set:
+Locally, copy `.env.example` to `.env.local` and set `VITE_ORDER_INTAKE_URL` to
+the same `/exec` URL production uses (see the GitHub Actions variable).
 
-```
-VITE_ORDER_INTAKE_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
-```
+Production already has:
 
-For production, add a GitHub Actions **variable** (not a secret — this URL is public in the built JS):
-
-| Name | Value |
+| Name | Where |
 |------|--------|
-| `VITE_ORDER_INTAKE_URL` | the web app `/exec` URL |
+| `VITE_ORDER_INTAKE_URL` | Repo → **Settings → Secrets and variables → Actions → Variables** |
 
-Repo → **Settings → Secrets and variables → Actions → Variables**. Redeploy after saving (push to `main` or run the workflow).
+It is a **variable**, not a secret — the URL is public in the built JS. After
+changing it, push to `main` or run **Deploy to GitHub Pages** so the site rebuilds.
 
 ### Verify it works
 
 Work through these in order — the first two catch most setup mistakes.
 
-1. **Script is reachable.** Open the `/exec` URL in a browser. You should see
+1. **Script is reachable.** Open the production `/exec` URL in a browser. You should see
    JSON with `"ok":true`, `"service":"kneaded-with-love-order-intake"`, and a
    `pickupDates` array of `YYYY-MM-DD` strings. An HTML sign-in page instead
    means access is not set to **Anyone**. Opening this URL also creates the
@@ -243,20 +252,49 @@ Use **Status** (`New`, `Confirmed`, `Paid`, `Ready`, `Picked up`, `Cancelled`) a
 
 ### Opening and blocking pickup dates
 
-Customers pick any date that is at least **2 days** out, **before 12pm Eastern**. At noon or later, the current day no longer counts, so the first pickup moves one day later. The calendar only shows the next **4 weeks**.
+Default (no Availability rows): every day in the next **4 weeks**, as long as
+it is not less than **2 calendar days** out.
 
-Manage exceptions on the **Availability** tab of the same spreadsheet (created on the first `/exec` visit or the first order):
+Lead time is Eastern time (`America/New_York`):
+
+- Before **12:00pm**, the earliest pickup is today + 2 days.
+- At **12:00pm or later**, today does not count, so the earliest pickup is
+  tomorrow + 2 days (orders cannot be placed with less than that 48-hour
+  window after noon).
+
+The website calendar reads `pickupDates` from the script. Changing the
+**Availability** tab is enough — you do not need a code deploy for open/closed
+days. The script re-checks the sheet on every GET and every order.
+
+Manage dates on the **Availability** tab:
 
 | Start date | End date | Status | Note |
 |------------|----------|--------|------|
-| 2026-09-24 | 2026-09-28 | Blocked | Vacation — no pickups this week |
+| 2026-09-21 | 2026-09-23 | Blocked | Weekdays closed — Thursday/Sunday only |
 | 2026-09-22 | | Open | One rush Tuesday |
 
 - Leave **End date** blank to affect a single day.
 - **Blocked** hides those dates on the site and rejects them if someone submits them anyway.
 - **Open** adds a date even if it is inside the 2-day window or past 4 weeks. Use this for a one-off extra pickup day.
 - If the same day is both Blocked and Open, **Blocked wins**.
-- Delete a row (or clear Status) to go back to the default.
+- Delete a row (or clear Status) to go back to “any day that meets lead time.”
+
+**Current bakery hours (sheet, not code):** weekday ranges are Blocked so the
+site only offers **Thursday and Sunday**. To add a Saturday later, delete or
+shorten the Blocked range that covers it — or add an **Open** row for that day.
+
+> **The last offered date is not the last open day.** The window is always
+> today + 28 days, so the final Thursday or Sunday inside it looks like a wall
+> — e.g. on Sep 19 the window ends Fri Oct 17, and since Oct 16–17 are closed,
+> nothing shows after Thu Oct 15 even though Sun Oct 18 is open. It appears the
+> next day, when the window rolls forward. Nothing past the window is
+> "blocked"; it just is not bookable yet.
+
+Because the window rolls daily, **Blocked rows expire**. Rows covering weekdays
+only through Oct 17 mean that on Oct 18 the window reaches Mon Oct 19, which no
+row blocks, so a Monday quietly becomes bookable. Either keep extending the
+ranges, or move the weekday rule into `CONFIG` and `src/lib/pickupAvailability.ts`
+so it cannot decay.
 
 ---
 
@@ -270,6 +308,7 @@ npm run dev
 Open **http://localhost:5173**
 
 ```bash
+npm test         # pickup-date rules (src/lib/pickupAvailability.test.ts)
 npm run build    # production build → dist/
 npm run preview  # preview production build locally
 ```
@@ -309,6 +348,8 @@ No manual upload is required.
 |------|-----|
 | Live site | https://kneadedwithlove.com |
 | GitHub repo | https://github.com/nabihsabeh85/kneadedwithlove |
+| Orders spreadsheet | https://docs.google.com/spreadsheets/d/1Dgj1E4pe9SQnGMyi_4WF7ozyDUV_9rpgWoXnYNXyy4Y/edit |
+| Availability tab | https://docs.google.com/spreadsheets/d/1Dgj1E4pe9SQnGMyi_4WF7ozyDUV_9rpgWoXnYNXyy4Y/edit#gid=2043331286 |
 | Pages settings | https://github.com/nabihsabeh85/kneadedwithlove/settings/pages |
 | Deploy workflow | https://github.com/nabihsabeh85/kneadedwithlove/actions/workflows/deploy.yml |
 | Cloudflare dashboard | https://dash.cloudflare.com (login: `gnsabeh@gmail.com`) |
