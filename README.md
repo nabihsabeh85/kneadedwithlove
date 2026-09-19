@@ -279,10 +279,22 @@ Manage dates on the **Availability** tab:
 - If the same day is both Blocked and Open, **Blocked wins**.
 - Delete a row (or clear Status) to go back to “any day that meets lead time.”
 
-**Current bakery hours (sheet, not code):** weekdays through the booking
-horizon are Blocked so the site only offers **Thursday and Sunday**. To add a
-Saturday later, delete or shorten the Blocked range that covers it — or add an
-**Open** row for that one day.
+**Current bakery hours (sheet, not code):** weekday ranges are Blocked so the
+site only offers **Thursday and Sunday**. To add a Saturday later, delete or
+shorten the Blocked range that covers it — or add an **Open** row for that day.
+
+> **The last offered date is not the last open day.** The window is always
+> today + 28 days, so the final Thursday or Sunday inside it looks like a wall
+> — e.g. on Sep 19 the window ends Fri Oct 17, and since Oct 16–17 are closed,
+> nothing shows after Thu Oct 15 even though Sun Oct 18 is open. It appears the
+> next day, when the window rolls forward. Nothing past the window is
+> "blocked"; it just is not bookable yet.
+
+Because the window rolls daily, **Blocked rows expire**. Rows covering weekdays
+only through Oct 17 mean that on Oct 18 the window reaches Mon Oct 19, which no
+row blocks, so a Monday quietly becomes bookable. Either keep extending the
+ranges, or move the weekday rule into `CONFIG` and `src/lib/pickupAvailability.ts`
+so it cannot decay.
 
 ---
 
