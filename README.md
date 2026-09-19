@@ -143,13 +143,13 @@ to email a string taken from the request — that would turn the endpoint into a
 open relay for sending mail as the bakery. It also caps throughput at
 `CONFIG.MAX_ORDERS_PER_HOUR` and refuses to record an order it cannot email.
 
-`CONFIG` in the script duplicates three things that live in the site source.
+`CONFIG` in the script duplicates things that live in the site source.
 Update both sides together, then redeploy a new version:
 
 | Script | Site |
 |--------|------|
 | `CONFIG.PRICES` | `priceUsd` in `src/data/menu.ts` |
-| `CONFIG.PICKUP_DAYS` | `PICKUP_DAYS` in `src/constants.ts` |
+| `CONFIG.MIN_LEAD_DAYS`, `CUTOFF_HOUR`, `BOOKING_HORIZON_DAYS`, timezone | `src/lib/pickupAvailability.ts` |
 | `CONFIG.PAYMENT_LABELS` | `PAYMENT_METHODS` in `src/constants.ts` |
 
 A menu item missing from `CONFIG.PRICES` is still accepted, but the order is
@@ -189,8 +189,10 @@ Repo → **Settings → Secrets and variables → Actions → Variables**. Redep
 Work through these in order — the first two catch most setup mistakes.
 
 1. **Script is reachable.** Open the `/exec` URL in a browser. You should see
-   `{"ok":true,"service":"kneaded-with-love-order-intake"}`. An HTML sign-in page
-   instead means access is not set to **Anyone**.
+   JSON with `"ok":true`, `"service":"kneaded-with-love-order-intake"`, and a
+   `pickupDates` array of `YYYY-MM-DD` strings. An HTML sign-in page instead
+   means access is not set to **Anyone**. Opening this URL also creates the
+   **Availability** sheet tab if it is missing.
 2. **Validation is intact.** In the Apps Script editor, select
    `runValidationTests_` and press **Run**. The execution log should end with
    `All validation tests passed.` This sends no email and writes no rows.
@@ -233,9 +235,28 @@ mailbox` vs `Bounced`) and the bounce reason.
 
 ### Tracking orders in the sheet
 
-Columns: Timestamp, Status, Name, Phone, Email, Pickup day, Payment, Items, Estimated total, Message, Source.
+Columns: Timestamp, Status, Name, Phone, Email, Pickup date, Payment, Items, Estimated total, Message, Source.
+
+Pickup date is a calendar day (`2026-09-24`), not a weekday name. Older sheets labeled this column **Pickup day**; the script renames it the next time it runs.
 
 Use **Status** (`New`, `Confirmed`, `Paid`, `Ready`, `Picked up`, `Cancelled`) as the working queue. After you change the Apps Script, deploy a **new version** (Deploy → Manage deployments → Edit → New version).
+
+### Opening and blocking pickup dates
+
+Customers pick any date that is at least **2 days** out, **before 12pm Eastern**. At noon or later, the current day no longer counts, so the first pickup moves one day later. The calendar only shows the next **4 weeks**.
+
+Manage exceptions on the **Availability** tab of the same spreadsheet (created on the first `/exec` visit or the first order):
+
+| Start date | End date | Status | Note |
+|------------|----------|--------|------|
+| 2026-09-24 | 2026-09-28 | Blocked | Vacation — no pickups this week |
+| 2026-09-22 | | Open | One rush Tuesday |
+
+- Leave **End date** blank to affect a single day.
+- **Blocked** hides those dates on the site and rejects them if someone submits them anyway.
+- **Open** adds a date even if it is inside the 2-day window or past 4 weeks. Use this for a one-off extra pickup day.
+- If the same day is both Blocked and Open, **Blocked wins**.
+- Delete a row (or clear Status) to go back to the default.
 
 ---
 

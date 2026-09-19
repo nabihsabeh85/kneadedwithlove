@@ -7,9 +7,12 @@
  *   Who has access: Anyone
  *
  * The site POSTs JSON (text/plain) to the web app URL. This script:
- *   1. Appends a row to the Orders sheet
- *   2. Emails the bakery
- *   3. Emails the customer a confirmation
+ *   1. Serves available pickup dates on GET
+ *   2. Appends a row to the Orders sheet
+ *   3. Emails the bakery
+ *   4. Emails the customer a confirmation
+ *
+ * Block or open dates on the Availability tab (Start date, End date, Status).
  *
  * The web app is public, so the request is treated as untrusted input: every
  * email body is composed here from validated fields. Never email a string that
@@ -27,8 +30,11 @@ const CONFIG = {
   VENMO_USERNAME: "veronica-sabeh",
   BRAND_INSTAGRAM: "@kneadedwithlovefl",
   WEBSITE: "https://kneadedwithlove.com",
-  /** Keep in sync with PICKUP_DAYS in src/constants.ts */
-  PICKUP_DAYS: ["Thursday", "Sunday"],
+  /** Keep in sync with src/lib/pickupAvailability.ts */
+  MIN_LEAD_DAYS: 2,
+  CUTOFF_HOUR: 12,
+  BOOKING_HORIZON_DAYS: 28,
+  AVAILABILITY_SHEET: "Availability",
   /** Keep in sync with PAYMENT_METHODS in src/constants.ts */
   PAYMENT_LABELS: {
     zelle: "Zelle",
@@ -55,7 +61,7 @@ const CONFIG = {
     "Name",
     "Phone",
     "Email",
-    "Pickup day",
+    "Pickup date",
     "Payment",
     "Items",
     "Estimated total",
@@ -65,7 +71,14 @@ const CONFIG = {
 };
 
 function doGet() {
-  return json_({ ok: true, service: "kneaded-with-love-order-intake" });
+  ensureAvailabilitySheet_();
+  ensureOrderPickupHeader_();
+  return json_({
+    ok: true,
+    service: "kneaded-with-love-order-intake",
+    timezone: CONFIG.TIMEZONE,
+    pickupDates: listAvailablePickupDates_(new Date(), getAvailabilityRules_()),
+  });
 }
 
 function doPost(e) {
@@ -81,6 +94,9 @@ function doPost(e) {
     if (cleanLine_(data.honeypot, 200)) {
       return json_({ ok: true });
     }
+
+    ensureAvailabilitySheet_();
+    ensureOrderPickupHeader_();
 
     const order = normalizeOrder_(data);
 
@@ -139,11 +155,14 @@ function cleanBlock_(value, maxLength) {
     .slice(0, maxLength);
 }
 
-function normalizeOrder_(data) {
+function normalizeOrder_(data, now, rules) {
+  now = now || new Date();
+  rules = rules || getAvailabilityRules_();
+
   const name = cleanLine_(data.name, 80);
   const phone = cleanLine_(data.phone, 30);
   const email = cleanLine_(data.email, 254);
-  const pickupDay = cleanLine_(data.pickupDay, 40);
+  const pickupDate = cleanLine_(data.pickupDate || data.pickupDay, 10);
   const paymentMethod = cleanLine_(data.paymentMethod, 20).toLowerCase();
   const message = cleanBlock_(data.message, 2000);
   const source = cleanLine_(data.source, 200);
@@ -155,8 +174,8 @@ function normalizeOrder_(data) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error("Invalid email");
   }
-  if (CONFIG.PICKUP_DAYS.indexOf(pickupDay) === -1) {
-    throw new Error("Invalid pickup day");
+  if (!isPickupDateAllowed_(pickupDate, now, rules)) {
+    throw new Error("Invalid pickup date");
   }
   if (!Object.prototype.hasOwnProperty.call(CONFIG.PAYMENT_LABELS, paymentMethod)) {
     throw new Error("Invalid payment method");
@@ -168,7 +187,8 @@ function normalizeOrder_(data) {
     name: name,
     phone: phone,
     email: email,
-    pickupDay: pickupDay,
+    pickupDate: pickupDate,
+    pickupDateLabel: formatPickupDateLabel_(pickupDate),
     paymentMethod: paymentMethod,
     paymentLabel: CONFIG.PAYMENT_LABELS[paymentMethod],
     items: items,
@@ -263,6 +283,180 @@ function orderSummary_(order) {
     .join(", ");
 }
 
+function pad2_(value) {
+  return String(value).padStart(2, "0");
+}
+
+function toYmd_(year, month, day) {
+  return year + "-" + pad2_(month) + "-" + pad2_(day);
+}
+
+function parseYmd_(ymd) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ymd || ""));
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  if (
+    probe.getUTCFullYear() !== year ||
+    probe.getUTCMonth() !== month - 1 ||
+    probe.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return { year: year, month: month, day: day };
+}
+
+function addDaysYmd_(ymd, days) {
+  const parsed = parseYmd_(ymd);
+  if (!parsed) throw new Error("Invalid date: " + ymd);
+  const date = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day));
+  date.setUTCDate(date.getUTCDate() + days);
+  return toYmd_(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
+function bakeryToday_(now) {
+  return Utilities.formatDate(now, CONFIG.TIMEZONE, "yyyy-MM-dd");
+}
+
+function bakeryHour_(now) {
+  return Number(Utilities.formatDate(now, CONFIG.TIMEZONE, "H"));
+}
+
+function minPickupYmd_(now) {
+  let start = bakeryToday_(now);
+  if (bakeryHour_(now) >= CONFIG.CUTOFF_HOUR) {
+    start = addDaysYmd_(start, 1);
+  }
+  return addDaysYmd_(start, CONFIG.MIN_LEAD_DAYS);
+}
+
+function maxPickupYmd_(now) {
+  return addDaysYmd_(bakeryToday_(now), CONFIG.BOOKING_HORIZON_DAYS);
+}
+
+function formatPickupDateLabel_(ymd) {
+  const parsed = parseYmd_(ymd);
+  if (!parsed) return ymd;
+  const date = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day, 12));
+  return Utilities.formatDate(date, "UTC", "EEEE, MMMM d, yyyy");
+}
+
+function ymdFromSheetValue_(value) {
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CONFIG.TIMEZONE, "yyyy-MM-dd");
+  }
+  const match = String(value || "").trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : "";
+}
+
+function expandDateRange_(startYmd, endYmd) {
+  if (!parseYmd_(startYmd)) return [];
+  if (!endYmd || !parseYmd_(endYmd)) endYmd = startYmd;
+  if (endYmd < startYmd) {
+    const swap = startYmd;
+    startYmd = endYmd;
+    endYmd = swap;
+  }
+  const dates = [];
+  let cursor = startYmd;
+  for (let i = 0; i < 400 && cursor <= endYmd; i++) {
+    dates.push(cursor);
+    cursor = addDaysYmd_(cursor, 1);
+  }
+  return dates;
+}
+
+function emptyAvailabilityRules_() {
+  return { blocked: [], opened: [] };
+}
+
+function getAvailabilityRules_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.AVAILABILITY_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return emptyAvailabilityRules_();
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  const blocked = [];
+  const opened = [];
+
+  for (let i = 0; i < values.length; i++) {
+    const start = ymdFromSheetValue_(values[i][0]);
+    const end = ymdFromSheetValue_(values[i][1]);
+    const status = String(values[i][2] || "")
+      .trim()
+      .toLowerCase();
+    if (!start) continue;
+    const dates = expandDateRange_(start, end);
+    if (status === "blocked") {
+      Array.prototype.push.apply(blocked, dates);
+    } else if (status === "open") {
+      Array.prototype.push.apply(opened, dates);
+    }
+  }
+
+  return { blocked: blocked, opened: opened };
+}
+
+function listAvailablePickupDates_(now, rules) {
+  rules = rules || emptyAvailabilityRules_();
+  const today = bakeryToday_(now);
+  const blocked = {};
+  const opened = {};
+  (rules.blocked || []).forEach(function (date) {
+    blocked[date] = true;
+  });
+  (rules.opened || []).forEach(function (date) {
+    opened[date] = true;
+  });
+
+  const available = {};
+  let cursor = minPickupYmd_(now);
+  const max = maxPickupYmd_(now);
+  while (cursor <= max) {
+    if (!blocked[cursor]) available[cursor] = true;
+    cursor = addDaysYmd_(cursor, 1);
+  }
+
+  Object.keys(opened).forEach(function (date) {
+    if (!blocked[date] && date >= today && parseYmd_(date)) {
+      available[date] = true;
+    }
+  });
+
+  return Object.keys(available).sort();
+}
+
+function isPickupDateAllowed_(ymd, now, rules) {
+  return listAvailablePickupDates_(now, rules).indexOf(ymd) !== -1;
+}
+
+function ensureAvailabilitySheet_() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = spreadsheet.getSheetByName(CONFIG.AVAILABILITY_SHEET);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(CONFIG.AVAILABILITY_SHEET);
+  }
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["Start date", "End date", "Status", "Note"]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 4).setFontWeight("bold");
+    const statusRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(["Blocked", "Open"], true)
+      .setAllowInvalid(false)
+      .build();
+    sheet.getRange("C2:C").setDataValidation(statusRule);
+    sheet.setColumnWidths(1, 4, 140);
+    sheet.setColumnWidth(4, 260);
+    sheet.getRange("A2").setNote(
+      "Block a vacation week with Start date, End date, and Status = Blocked. Leave End date blank for a single day. Status = Open adds a date even inside the 2-day lead time or past 4 weeks. Blocked wins if both are set for the same day.",
+    );
+  }
+
+  return sheet;
+}
+
 function getSheet_() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(CONFIG.SHEET_NAME);
@@ -285,7 +479,18 @@ function getSheet_() {
     sheet.setColumnWidth(10, 260);
   }
 
+  ensureOrderPickupHeader_();
+
   return sheet;
+}
+
+function ensureOrderPickupHeader_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEET_NAME);
+  if (!sheet || sheet.getLastRow() === 0) return;
+  const header = String(sheet.getRange(1, 6).getValue() || "");
+  if (header === "Pickup day") {
+    sheet.getRange(1, 6).setValue("Pickup date");
+  }
 }
 
 function appendOrderRow_(order) {
@@ -297,7 +502,7 @@ function appendOrderRow_(order) {
     order.name,
     order.phone,
     order.email,
-    order.pickupDay,
+    order.pickupDate,
     order.paymentLabel,
     orderSummary_(order),
     formatUsd_(order.total) + (order.hasUnpricedItem ? " + items priced manually" : ""),
@@ -313,7 +518,7 @@ function sendBakeryEmail_(order) {
     "Name: " + order.name,
     "Phone / Text: " + order.phone,
     "Customer email: " + order.email,
-    "Pickup day: " + order.pickupDay,
+    "Pickup date: " + order.pickupDateLabel,
     "Payment: " + order.paymentLabel,
     "",
     "Order:",
@@ -377,7 +582,7 @@ function sendCustomerEmail_(order) {
     )
     .concat([
       "Estimated total: " + formatUsd_(order.total),
-      "Pickup day: " + order.pickupDay,
+      "Pickup date: " + order.pickupDateLabel,
       "",
       paymentNote_(order),
       "",
@@ -424,11 +629,13 @@ function json_(payload) {
  * changing the script. It exercises validation only — no rows, no email.
  */
 function runValidationTests_() {
+  const now = new Date("2026-09-21T11:00:00-04:00");
+  const emptyRules = { blocked: [], opened: [] };
   const validOrder = {
     name: "Test Customer",
     phone: "555-0100",
     email: "test@example.com",
-    pickupDay: "Sunday",
+    pickupDate: "2026-09-23",
     paymentMethod: "zelle",
     items: [{ name: "Classic Country", quantity: 2 }],
     message: "No walnuts please",
@@ -437,19 +644,19 @@ function runValidationTests_() {
 
   const failures = [];
 
-  function expectValid(label, patch) {
+  function expectValid(label, patch, rules) {
     const input = Object.assign({}, validOrder, patch || {});
     try {
-      return normalizeOrder_(input);
+      return normalizeOrder_(input, now, rules || emptyRules);
     } catch (err) {
       failures.push(label + " should have been accepted, but failed: " + err.message);
       return null;
     }
   }
 
-  function expectRejected(label, patch) {
+  function expectRejected(label, patch, rules) {
     try {
-      normalizeOrder_(Object.assign({}, validOrder, patch));
+      normalizeOrder_(Object.assign({}, validOrder, patch), now, rules || emptyRules);
       failures.push(label + " should have been rejected, but was accepted");
     } catch (_err) {
       // expected
@@ -464,7 +671,27 @@ function runValidationTests_() {
     if (normalized.paymentLabel !== "Zelle") {
       failures.push("expected payment label Zelle, got " + normalized.paymentLabel);
     }
+    if (normalized.pickupDateLabel !== "Wednesday, September 23, 2026") {
+      failures.push("unexpected pickup date label: " + normalized.pickupDateLabel);
+    }
   }
+
+  if (minPickupYmd_(now) !== "2026-09-23") {
+    failures.push("expected Wednesday as the first pickup before noon, got " + minPickupYmd_(now));
+  }
+  if (minPickupYmd_(new Date("2026-09-21T12:00:00-04:00")) !== "2026-09-24") {
+    failures.push("expected Thursday as the first pickup at noon");
+  }
+
+  expectRejected("a blocked vacation date", { pickupDate: "2026-09-24" }, {
+    blocked: ["2026-09-24"],
+    opened: [],
+  });
+
+  expectValid("a rush date marked Open", { pickupDate: "2026-09-22" }, {
+    blocked: [],
+    opened: ["2026-09-22"],
+  });
 
   // A tampered price must not influence the total.
   const tampered = expectValid("an order with a tampered price", {
@@ -488,7 +715,8 @@ function runValidationTests_() {
 
   expectRejected("a missing name", { name: "" });
   expectRejected("a malformed email", { email: "not-an-email" });
-  expectRejected("a pickup day we do not offer", { pickupDay: "Monday" });
+  expectRejected("a weekday name instead of a date", { pickupDate: "Sunday" });
+  expectRejected("today as a pickup date", { pickupDate: "2026-09-21" });
   expectRejected("an unknown payment method", { paymentMethod: "bitcoin" });
   expectRejected("an empty order", { items: [] });
   expectRejected("a non-array items field", { items: "Classic Country" });

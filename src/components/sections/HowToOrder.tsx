@@ -1,4 +1,4 @@
-import { BRAND, PICKUP_DAYS_LABEL, PICKUP_DAYS_SENTENCE } from "../../constants";
+import { BRAND } from "../../constants";
 import { SectionHeading } from "../ui/SectionHeading";
 
 const steps = [
@@ -10,7 +10,7 @@ const steps = [
   {
     number: "02",
     title: "We confirm the details",
-    description: `We’ll reply within 6 hours to confirm your ${PICKUP_DAYS_LABEL} pickup.`,
+    description: "We’ll reply within 6 hours to confirm your pickup date.",
   },
   {
     number: "03",
@@ -52,10 +52,10 @@ export function HowToOrder() {
         </ol>
 
         <p className="mt-10 rounded-2xl border border-lavender/30 bg-white/70 px-6 py-4 text-center font-body text-sm leading-relaxed text-deep-blue sm:text-base">
-          <strong className="font-bold">Pre-order only.</strong> Pickup days are{" "}
-          <strong>{PICKUP_DAYS_SENTENCE}</strong>. Exact pickup address sent after your order is
-          confirmed. Pay with <strong>Zelle</strong>, <strong>Venmo</strong>, or at pickup.
-          Please allow at least <strong>24–48 hours</strong> when possible.
+          <strong className="font-bold">Pre-order only.</strong> Choose a pickup date at least{" "}
+          <strong>2 days in advance</strong> (order by <strong>12pm Eastern</strong>). Exact pickup
+          address sent after your order is confirmed. Pay with <strong>Zelle</strong>,{" "}
+          <strong>Venmo</strong>, or at pickup.
         </p>
         <p className="mt-4 text-center font-body text-xs leading-relaxed text-warm-gray/75">
           {BRAND.cottageFoodNote}

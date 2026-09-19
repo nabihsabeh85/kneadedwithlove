@@ -3,14 +3,14 @@ import {
   BRAND,
   PAYMENT,
   PAYMENT_METHODS,
-  PICKUP_DAYS,
-  PICKUP_DAYS_LABEL,
   paymentDestination,
   type PaymentMethodId,
 } from "../../constants";
 import { menuCategories } from "../../data/menu";
-import { getOrderIntakeUrl, submitOrder } from "../../lib/orderIntake";
+import { fetchPickupDates, getOrderIntakeUrl, submitOrder } from "../../lib/orderIntake";
 import { ADD_ORDER_ITEM_EVENT } from "../../lib/orderSelection";
+import { listAvailablePickupDates, formatPickupDateLabel } from "../../lib/pickupAvailability";
+import { PickupCalendar } from "../ui/PickupCalendar";
 import { SectionHeading } from "../ui/SectionHeading";
 import { Button } from "../ui/Button";
 
@@ -18,7 +18,7 @@ type FormState = {
   name: string;
   phone: string;
   email: string;
-  pickupDay: string;
+  pickupDate: string;
   paymentMethod: PaymentMethodId | "";
   message: string;
 };
@@ -33,7 +33,7 @@ const initialState: FormState = {
   name: "",
   phone: "",
   email: "",
-  pickupDay: "",
+  pickupDate: "",
   paymentMethod: "",
   message: "",
 };
@@ -78,6 +78,43 @@ export function Contact() {
   // Set only once the order backend confirms it sent the confirmation email, so
   // the success dialog never promises mail we cannot account for.
   const [confirmationEmail, setConfirmationEmail] = useState("");
+  const [pickupDates, setPickupDates] = useState<string[]>(() =>
+    listAvailablePickupDates(new Date()),
+  );
+  const [pickupDatesStatus, setPickupDatesStatus] = useState<"loading" | "ready" | "local">(
+    getOrderIntakeUrl() ? "loading" : "local",
+  );
+
+  useEffect(() => {
+    const intakeUrl = getOrderIntakeUrl();
+    if (!intakeUrl) return;
+
+    let cancelled = false;
+    setPickupDatesStatus("loading");
+
+    void fetchPickupDates(intakeUrl)
+      .then((dates) => {
+        if (cancelled) return;
+        setPickupDates(dates);
+        setPickupDatesStatus("ready");
+      })
+      .catch((error) => {
+        console.error("Could not load pickup dates from the order system", error);
+        if (cancelled) return;
+        setPickupDates(listAvailablePickupDates(new Date()));
+        setPickupDatesStatus("local");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!form.pickupDate) return;
+    if (pickupDates.includes(form.pickupDate)) return;
+    setForm((prev) => ({ ...prev, pickupDate: "" }));
+  }, [form.pickupDate, pickupDates]);
 
   const update =
     (field: keyof FormState) =>
@@ -135,7 +172,7 @@ export function Contact() {
       `Name: ${data.name}`,
       `Phone / Text: ${data.phone}`,
       `Customer email: ${data.email}`,
-      `Pickup day: ${data.pickupDay}`,
+      `Pickup date: ${formatPickupDateLabel(data.pickupDate)}`,
       `Payment: ${
         data.paymentMethod
           ? PAYMENT_METHODS.find((method) => method.id === data.paymentMethod)?.label
@@ -174,10 +211,17 @@ export function Contact() {
       return;
     }
 
-    if (!form.pickupDay) {
+    if (pickupDatesStatus === "loading") {
       e.preventDefault();
       setStatus("error");
-      setErrorMessage(`Please choose a pickup day (${PICKUP_DAYS_LABEL}).`);
+      setErrorMessage("Pickup dates are still loading. Please wait a moment and try again.");
+      return;
+    }
+
+    if (!form.pickupDate || !pickupDates.includes(form.pickupDate)) {
+      e.preventDefault();
+      setStatus("error");
+      setErrorMessage("Please choose an available pickup date.");
       return;
     }
 
@@ -209,7 +253,7 @@ export function Contact() {
         name: form.name.trim(),
         phone: form.phone.trim(),
         email,
-        pickupDay: form.pickupDay,
+        pickupDate: form.pickupDate,
         paymentMethod: form.paymentMethod,
         items: selectedItems.map((item) => ({
           name: item.name,
@@ -270,7 +314,7 @@ export function Contact() {
             eyebrow="Ready when you are"
             headingId="contact-heading"
             title="Build your order"
-            subtitle="Choose your bakes and pickup preference. Nothing is charged until your order is confirmed."
+            subtitle="Choose your bakes and a pickup date. Nothing is charged until your order is confirmed."
             align="left"
           />
 
@@ -278,7 +322,7 @@ export function Contact() {
             <li className="flex gap-3">
               <span className="font-bold text-deep-blue">Pickup</span>
               <span>
-                {BRAND.location} · {PICKUP_DAYS_LABEL}
+                {BRAND.location} · choose a date
               </span>
             </li>
             <li className="flex gap-3">
@@ -382,7 +426,7 @@ export function Contact() {
               name="estimated_total"
               value={currency.format(orderTotal)}
             />
-            <input type="hidden" name="pickup_day" value={form.pickupDay} />
+            <input type="hidden" name="pickup_date" value={form.pickupDate} />
             <input type="hidden" name="payment_method" value={form.paymentMethod} />
             <input type="hidden" name="details" value={buildNotification(form)} />
             <div>
@@ -551,32 +595,28 @@ export function Contact() {
                   Step 3 of 4
                 </span>
                 <span className="mt-1 block font-display text-2xl font-bold text-deep-blue">
-                  Choose a pickup day <span aria-hidden="true">*</span>
+                  Choose a pickup date <span aria-hidden="true">*</span>
                 </span>
               </legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {PICKUP_DAYS.map((day) => (
-                  <label
-                    key={day}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 font-body transition-colors ${
-                      form.pickupDay === day
-                        ? "border-soft-blue bg-soft-blue/10 text-deep-blue"
-                        : "border-light-lavender bg-white/90 text-warm-gray hover:border-soft-blue/50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="pickupDay"
-                      value={day}
-                      required
-                      checked={form.pickupDay === day}
-                      onChange={update("pickupDay")}
-                      className="h-4 w-4 accent-deep-blue"
-                    />
-                    {day}
-                  </label>
-                ))}
-              </div>
+              {pickupDatesStatus === "loading" ? (
+                <p className="rounded-2xl border border-light-lavender bg-white/90 px-4 py-3 font-body text-sm text-warm-gray">
+                  Loading available pickup dates…
+                </p>
+              ) : (
+                <PickupCalendar
+                  availableDates={pickupDates}
+                  value={form.pickupDate}
+                  disabled={status === "sending"}
+                  onChange={(pickupDate) => setForm((prev) => ({ ...prev, pickupDate }))}
+                />
+              )}
+              {pickupDatesStatus === "local" && getOrderIntakeUrl() ? (
+                <p className="mt-3 font-body text-xs text-warm-gray/80">
+                  Closed dates may not be shown until you submit. If a date is not
+                  available, we will ask you to pick another.
+                </p>
+              ) : null}
+              <input type="hidden" name="pickupDate" value={form.pickupDate} required />
             </fieldset>
 
             <fieldset>

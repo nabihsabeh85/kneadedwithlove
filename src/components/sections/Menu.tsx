@@ -1,4 +1,3 @@
-import { PICKUP_DAYS_SENTENCE } from "../../constants";
 import { menuCategories } from "../../data/menu";
 import { addItemToOrder } from "../../lib/orderSelection";
 import { SectionHeading } from "../ui/SectionHeading";
@@ -13,7 +12,7 @@ export function Menu() {
           eyebrow="Fresh from the oven"
           headingId="menu-heading"
           title="Choose your favorite"
-          subtitle={`Pre-order only. Pickup ${PICKUP_DAYS_SENTENCE} — exact address sent after your order is confirmed.`}
+          subtitle="Pre-order only. Choose a pickup date at least 2 days in advance — exact address sent after your order is confirmed."
         />
 
         <div className="space-y-16">

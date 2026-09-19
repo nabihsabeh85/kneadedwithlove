@@ -1,12 +1,3 @@
-/** Available local pickup days — change here to update the whole site */
-export const PICKUP_DAYS = ["Thursday", "Sunday"] as const;
-
-/** e.g. "Thursday or Sunday" */
-export const PICKUP_DAYS_LABEL = PICKUP_DAYS.join(" or ");
-
-/** e.g. "Thursday and Sunday" */
-export const PICKUP_DAYS_SENTENCE = PICKUP_DAYS.join(" and ");
-
 export const BRAND = {
   name: "Kneaded with Love",
   tagline: "Homemade sourdough & baked goods",
@@ -14,7 +5,8 @@ export const BRAND = {
   phone: "(917) 671-7674",
   phoneTel: "9176717674",
   location: "West Boca Raton",
-  pickupNote: `Pre-order only. Pickup days are ${PICKUP_DAYS_SENTENCE}. Exact pickup address sent after your order is confirmed.`,
+  pickupNote:
+    "Pre-order only. Choose a pickup date at least 2 days in advance (order by 12pm Eastern). Exact pickup address sent after your order is confirmed.",
   cottageFoodNote:
     "Made in a cottage food operation that is not subject to Florida’s food safety regulations.",
   instagramHandle: "@kneadedwithlovefl",

@@ -1,4 +1,4 @@
-import { PICKUP_DAYS_LABEL, productImageSrc } from "../../constants";
+import { productImageSrc } from "../../constants";
 import { Button } from "../ui/Button";
 import { WatercolorBackground } from "../ui/WatercolorBackground";
 
@@ -50,7 +50,7 @@ export function Hero() {
           >
             <li>Made to order</li>
             <li>Organic flour</li>
-            <li>{PICKUP_DAYS_LABEL} pickup</li>
+            <li>West Boca pickup</li>
           </ul>
         </div>
 

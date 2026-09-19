@@ -11,13 +11,48 @@ export type OrderIntakePayload = {
   name: string;
   phone: string;
   email: string;
-  pickupDay: string;
+  pickupDate: string;
   paymentMethod: string;
   items: OrderItemPayload[];
   message: string;
   honeypot: string;
   source: string;
 };
+
+export type PickupAvailabilityResponse = {
+  ok?: boolean;
+  pickupDates?: string[];
+  error?: string;
+};
+
+export async function fetchPickupDates(url: string): Promise<string[]> {
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+    });
+  } catch {
+    throw new OrderIntakeError("We could not load pickup dates.");
+  }
+
+  if (!response.ok) {
+    throw new OrderIntakeError(`Order system returned ${response.status}.`);
+  }
+
+  let result: PickupAvailabilityResponse;
+  try {
+    result = (await response.json()) as PickupAvailabilityResponse;
+  } catch {
+    throw new OrderIntakeError("Order system returned an unreadable response.");
+  }
+
+  if (result.ok !== true || !Array.isArray(result.pickupDates)) {
+    throw new OrderIntakeError(result.error || "Pickup dates are unavailable.");
+  }
+
+  return result.pickupDates.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date));
+}
 
 export function getOrderIntakeUrl(): string | undefined {
   const url = import.meta.env.VITE_ORDER_INTAKE_URL?.trim();
