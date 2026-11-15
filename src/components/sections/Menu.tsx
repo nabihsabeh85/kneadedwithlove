@@ -23,7 +23,7 @@ export function Menu() {
                   {category.title}
                 </h3>
                 <span className="font-body text-xs font-bold tracking-wide text-lavender uppercase">
-                  {category.items.length} choices
+                  {category.items.length} {category.items.length === 1 ? "choice" : "choices"}
                 </span>
               </div>
               <ul className="flex flex-wrap justify-center gap-3 sm:gap-6">

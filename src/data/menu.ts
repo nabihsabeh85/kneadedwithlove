@@ -5,8 +5,11 @@ export type MenuItem = {
   description: string;
   /** Display price shown on the menu */
   price: string;
-  /** Price charged per unit selected in the order form */
-  priceUsd: number;
+  /**
+   * Price charged per unit selected in the order form.
+   * Null means the bakery confirms the price before anything is charged.
+   */
+  priceUsd: number | null;
   imageAlt: string;
   imageSrc?: string;
 };
@@ -41,16 +44,16 @@ export const menuCategories: MenuCategory[] = [
       {
         name: "Olive & Feta",
         description: "Made with feta, Kalamata olives, and oregano.",
-        price: "$16",
-        priceUsd: 16,
+        price: "$18",
+        priceUsd: 18,
         imageAlt: "Olive and feta sourdough loaf",
         imageSrc: productImageSrc("olive-feta-loaf.jpg"),
       },
       {
         name: "Everything Bagel",
         description: "Made with sesame, poppy, garlic, and onion.",
-        price: "$15",
-        priceUsd: 15,
+        price: "$16",
+        priceUsd: 16,
         imageAlt: "Everything bagel sourdough loaf",
         imageSrc: productImageSrc("everything-bagel-loaf.jpg"),
       },
@@ -77,20 +80,58 @@ export const menuCategories: MenuCategory[] = [
     title: "Cookies",
     items: [
       {
-        name: "Dark Chocolate Chip Sourdough",
+        name: "Oatmeal Dark Chocolate Sourdough",
         description: "Four cookies per order — rich dark chocolate in a sourdough cookie.",
         price: "4 for $10",
         priceUsd: 10,
-        imageAlt: "Dark chocolate chip sourdough cookies",
+        imageAlt: "Oatmeal dark chocolate sourdough cookies",
         imageSrc: productImageSrc("oatmeal-chocolate-cookies.jpg"),
       },
       {
-        name: "S'mores",
+        name: "S'mores Sourdough",
         description: "Four cookies per order — toasted marshmallow and chocolate vibes.",
         price: "4 for $10",
         priceUsd: 10,
         imageAlt: "S'mores sourdough cookies",
         imageSrc: productImageSrc("smores-cookies.jpg"),
+      },
+    ],
+  },
+  {
+    id: "cakepops",
+    title: "Cakepops",
+    items: [
+      {
+        name: "Funfetti Frenzy Vanilla",
+        description: "A dozen cakepops, all Funfetti Frenzy Vanilla.",
+        price: "Dozen for $30",
+        priceUsd: 30,
+        imageAlt: "Funfetti Frenzy Vanilla cakepops",
+        imageSrc: productImageSrc("cakepops-funfetti-frenzy-vanilla.jpg"),
+      },
+      {
+        name: "Choco Craze: Chocolate",
+        description: "A dozen cakepops, all Choco Craze: Chocolate.",
+        price: "Dozen for $30",
+        priceUsd: 30,
+        imageAlt: "Choco Craze chocolate cakepops",
+        imageSrc: productImageSrc("cakepops-choco-craze-chocolate.jpg"),
+      },
+      {
+        name: "Lemon Splash: Lemon",
+        description: "A dozen cakepops, all Lemon Splash: Lemon.",
+        price: "Dozen for $30",
+        priceUsd: 30,
+        imageAlt: "Lemon Splash lemon cakepops",
+        imageSrc: productImageSrc("cakepops-lemon-splash-lemon.jpg"),
+      },
+      {
+        name: "Campfire Crunch: S'mores",
+        description: "A dozen cakepops, all Campfire Crunch: S'mores.",
+        price: "Dozen for $30",
+        priceUsd: 30,
+        imageAlt: "Campfire Crunch s'mores cakepops",
+        imageSrc: productImageSrc("cakepops-campfire-crunch-smores.jpg"),
       },
     ],
   },

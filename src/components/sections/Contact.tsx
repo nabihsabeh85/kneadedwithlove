@@ -29,6 +29,15 @@ const ORDERABLE_ITEM_NAMES = new Set(
   menuCategories.flatMap((category) => category.items.map((item) => item.name)),
 );
 
+const ORDER_CONVERSION_SEND_TO = "AW-18434421182/tKzxCNyZhrkdEL7jm9ZE";
+
+function reportOrderConversion(): void {
+  if (typeof window.gtag !== "function") return;
+  window.gtag("event", "conversion", {
+    send_to: ORDER_CONVERSION_SEND_TO,
+  });
+}
+
 const initialState: FormState = {
   name: "",
   phone: "",
@@ -158,12 +167,18 @@ export function Contact() {
           name: item.name,
           price: item.price,
           quantity: quantities[item.name],
-          lineTotal: item.priceUsd * quantities[item.name],
+          lineTotal: item.priceUsd === null ? null : item.priceUsd * quantities[item.name],
         })),
     [quantities],
   );
 
-  const orderTotal = selectedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const pricedTotal = selectedItems.reduce((sum, item) => sum + (item.lineTotal ?? 0), 0);
+  const hasUnpricedItem = selectedItems.some((item) => item.lineTotal === null);
+  const estimatedTotal = hasUnpricedItem
+    ? pricedTotal > 0
+      ? `${currency.format(pricedTotal)} plus items we'll price when we confirm`
+      : "We'll confirm the price with your order"
+    : currency.format(pricedTotal);
 
   const buildNotification = (data: FormState) =>
     [
@@ -182,9 +197,11 @@ export function Contact() {
       "Order:",
       ...selectedItems.map(
         (item) =>
-          `- ${item.quantity} x ${item.name} (${item.price}) = ${currency.format(item.lineTotal)}`,
+          `- ${item.quantity} x ${item.name} (${item.price}) = ${
+            item.lineTotal === null ? item.price : currency.format(item.lineTotal)
+          }`,
       ),
-      `Estimated total: ${currency.format(orderTotal)}`,
+      `Estimated total: ${estimatedTotal}`,
       "",
       "Message / special requests:",
       data.message.trim() || "(none)",
@@ -265,6 +282,7 @@ export function Contact() {
       });
       setConfirmationEmail(email);
       setStatus("success");
+      reportOrderConversion();
       setForm(initialState);
       setQuantities({});
     } catch (error) {
@@ -283,6 +301,7 @@ export function Contact() {
     if (params.get(ORDER_RECEIVED_PARAM) !== "1") return;
 
     setStatus("success");
+    reportOrderConversion();
     params.delete(ORDER_RECEIVED_PARAM);
     const query = params.toString();
     window.history.replaceState(
@@ -424,7 +443,7 @@ export function Contact() {
             <input
               type="hidden"
               name="estimated_total"
-              value={currency.format(orderTotal)}
+              value={estimatedTotal}
             />
             <input type="hidden" name="pickup_date" value={form.pickupDate} />
             <input type="hidden" name="payment_method" value={form.paymentMethod} />
@@ -576,13 +595,15 @@ export function Contact() {
                           <span>
                             {item.quantity} × {item.name}
                           </span>
-                          <span className="font-semibold">{currency.format(item.lineTotal)}</span>
+                          <span className="font-semibold">
+                            {item.lineTotal === null ? item.price : currency.format(item.lineTotal)}
+                          </span>
                         </li>
                       ))}
                     </ul>
                     <p className="mt-2 flex justify-between gap-3 border-t border-lavender/30 pt-2 font-bold">
                       <span>Estimated total</span>
-                      <span>{currency.format(orderTotal)}</span>
+                      <span>{estimatedTotal}</span>
                     </p>
                   </>
                 )}
